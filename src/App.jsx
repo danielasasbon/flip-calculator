@@ -120,6 +120,8 @@ export default function FlipCalc() {
   const [closingPct, setClosingPct] = useState(5);
   const [sellCommPct, setSellCommPct] = useState(3);
   const [sellMonths, setSellMonths] = useState(8);
+  const [expensas, setExpensas] = useState(200);
+  const [alquilerM2, setAlquilerM2] = useState(0);
   const [barrioInput, setBarrioInput] = useState("");
   const [barrio, setBarrio] = useState(null);
   const [showSug, setShowSug] = useState(false);
@@ -132,13 +134,10 @@ export default function FlipCalc() {
   const [saveNotas, setSaveNotas] = useState("");
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const r = await window.storage.get(STORAGE_KEY);
-        if (r?.value) setWatchlist(JSON.parse(r.value));
-      } catch (e) {}
-    };
-    load();
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) setWatchlist(JSON.parse(saved));
+    } catch (e) {}
   }, []);
 
   const saveToStorage = (list) => {
@@ -166,8 +165,18 @@ export default function FlipCalc() {
     const roiAnual    = roi ? (roi / sellMonths) * 12 : null;
     const viable      = profit > 0 && roi > 10;
     const discVsNuevo = arv && nuevoTotal ? ((nuevoTotal - arv) / nuevoTotal) * 100 : null;
-    return { buyPrice, refCost, closing, totalCost, arv, arvM2, nuevoTotal, sellComm, netSale, profit, roi, roiAnual, viable, discVsNuevo, usandoCustom };
-  }, [listPrice, m2, negPct, refType, refExtra, closingPct, sellCommPct, sellMonths, barrio, customUsadoM2, customNuevoM2]);
+    // Expensas durante tenencia
+    const expensasTotal = expensas * sellMonths;
+    const profitNeto = profit !== null ? profit - expensasTotal : null;
+    const roiNeto = profitNeto !== null ? (profitNeto / totalCost) * 100 : null;
+    const roiNetoAnual = roiNeto !== null ? (roiNeto / sellMonths) * 12 : null;
+    const viableNeto = profitNeto > 0 && roiNeto > 10;
+    // Alquiler
+    const alquilerMensual = alquilerM2 > 0 ? alquilerM2 * m2 : null;
+    const alquilerAnual = alquilerMensual ? alquilerMensual * 12 : null;
+    const alquilerROI = alquilerAnual ? (alquilerAnual / totalCost) * 100 : null;
+    return { buyPrice, refCost, closing, totalCost, arv, arvM2, nuevoTotal, sellComm, netSale, profit, roi, roiAnual, viable, discVsNuevo, usandoCustom, expensasTotal, profitNeto, roiNeto, roiNetoAnual, viableNeto, alquilerMensual, alquilerAnual, alquilerROI };
+  }, [listPrice, m2, negPct, refType, refExtra, closingPct, sellCommPct, sellMonths, barrio, customUsadoM2, customNuevoM2, expensas, alquilerM2]);
 
   const filtered = Object.keys(BARRIOS).filter(b =>
     barrioInput.length > 0 && b.toLowerCase().includes(barrioInput.toLowerCase())
@@ -265,7 +274,24 @@ export default function FlipCalc() {
           <>
             <SectionHeader title="Parámetros de entrada" sub="CABA · USD" mt={24} />
 
-            <Slider label="Precio de publicación" min={30000} max={400000} step={5000} value={listPrice} onChange={setListPrice} prefix="USD " />
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: C.textSub, letterSpacing: "0.1em", textTransform: "uppercase" }}>Precio de publicación</span>
+                <input
+                  type="number"
+                  value={listPrice}
+                  onChange={e => setListPrice(Number(e.target.value) || 0)}
+                  style={{ width: 130, padding: "4px 8px", background: C.panelAlt, border: `1px solid ${C.accent}`, borderRadius: 5, color: C.text, fontSize: 17, fontWeight: 700, fontFamily: C.mono, outline: "none", textAlign: "right" }}
+                />
+              </div>
+              <div style={{ position: "relative", height: 3, background: C.border, borderRadius: 2 }}>
+                <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: `${Math.min(((listPrice - 30000) / (400000 - 30000)) * 100, 100)}%`, background: C.accent, borderRadius: 2 }} />
+                <input type="range" min={30000} max={400000} step={1000} value={Math.min(listPrice, 400000)}
+                  onChange={e => setListPrice(Number(e.target.value))}
+                  style={{ position: "absolute", top: "50%", left: 0, width: "100%", transform: "translateY(-50%)", opacity: 0, cursor: "pointer", height: 20, margin: 0 }} />
+                <div style={{ position: "absolute", top: "50%", left: `${Math.min(((listPrice - 30000) / (400000 - 30000)) * 100, 100)}%`, transform: "translate(-50%, -50%)", width: 14, height: 14, borderRadius: "50%", background: C.accent, border: `2px solid ${C.panel}`, pointerEvents: "none" }} />
+              </div>
+            </div>
             <Slider label="Descuento negociación" min={0} max={20} step={1} value={negPct} onChange={setNegPct} suffix="%" />
 
             <div style={{ background: C.accentDim, border: `1px solid ${C.accent}`, borderRadius: 6, padding: "12px 16px", marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -273,7 +299,27 @@ export default function FlipCalc() {
               <span style={{ fontSize: 22, fontWeight: 700, color: C.text, fontFamily: C.mono }}>{fmtUSD(Math.round(c.buyPrice))}</span>
             </div>
 
-            <Slider label="Superficie" min={25} max={200} step={5} value={m2} onChange={setM2} suffix=" m²" />
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: C.textSub, letterSpacing: "0.1em", textTransform: "uppercase" }}>Superficie</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                  <input
+                    type="number"
+                    value={m2}
+                    onChange={e => setM2(Number(e.target.value) || 0)}
+                    style={{ width: 80, padding: "4px 8px", background: C.panelAlt, border: `1px solid ${C.accent}`, borderRadius: 5, color: C.text, fontSize: 17, fontWeight: 700, fontFamily: C.mono, outline: "none", textAlign: "right" }}
+                  />
+                  <span style={{ fontSize: 14, fontWeight: 700, color: C.textSub, fontFamily: C.mono }}>m²</span>
+                </div>
+              </div>
+              <div style={{ position: "relative", height: 3, background: C.border, borderRadius: 2 }}>
+                <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: `${Math.min(((m2 - 25) / (200 - 25)) * 100, 100)}%`, background: C.accent, borderRadius: 2 }} />
+                <input type="range" min={25} max={200} step={1} value={Math.min(m2, 200)}
+                  onChange={e => setM2(Number(e.target.value))}
+                  style={{ position: "absolute", top: "50%", left: 0, width: "100%", transform: "translateY(-50%)", opacity: 0, cursor: "pointer", height: 20, margin: 0 }} />
+                <div style={{ position: "absolute", top: "50%", left: `${Math.min(((m2 - 25) / (200 - 25)) * 100, 100)}%`, transform: "translate(-50%, -50%)", width: 14, height: 14, borderRadius: "50%", background: C.accent, border: `2px solid ${C.panel}`, pointerEvents: "none" }} />
+              </div>
+            </div>
 
             {/* Barrio */}
             <div style={{ marginBottom: 20 }}>
@@ -353,6 +399,25 @@ export default function FlipCalc() {
             <Slider label="Gastos de compra" min={2} max={10} step={0.5} value={closingPct} onChange={setClosingPct} suffix="%" />
             <Slider label="Comisión de venta" min={1} max={6} step={0.5} value={sellCommPct} onChange={setSellCommPct} suffix="%" />
             <Slider label="Plazo hasta venta" min={3} max={24} step={1} value={sellMonths} onChange={setSellMonths} suffix=" meses" />
+            <Slider label="Expensas mensuales" min={0} max={1000} step={50} value={expensas} onChange={setExpensas} prefix="USD " />
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: C.textSub, letterSpacing: "0.1em", textTransform: "uppercase" }}>Alquiler estimado / m²</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                  <input
+                    type="number"
+                    value={alquilerM2}
+                    onChange={e => setAlquilerM2(Number(e.target.value) || 0)}
+                    placeholder="0"
+                    style={{ width: 80, padding: "4px 8px", background: alquilerM2 > 0 ? C.accentDim : C.panelAlt, border: `1px solid ${alquilerM2 > 0 ? C.accent : C.border}`, borderRadius: 5, color: C.text, fontSize: 17, fontWeight: 700, fontFamily: C.mono, outline: "none", textAlign: "right" }}
+                  />
+                  <span style={{ fontSize: 14, fontWeight: 700, color: C.textSub, fontFamily: C.mono }}>USD/m²</span>
+                </div>
+              </div>
+              <div style={{ fontSize: 11, color: C.textMuted, fontFamily: C.mono }}>
+                {alquilerM2 > 0 ? `→ USD ${fmt(alquilerM2 * m2)}/mes · USD ${fmt(alquilerM2 * m2 * 12)}/año` : "Dejá en 0 para omitir comparativa de alquiler"}
+              </div>
+            </div>
 
             {/* ── RESULTADOS ── */}
             {!barrio ? (
@@ -368,6 +433,7 @@ export default function FlipCalc() {
                   <Row label="Precio de compra" value={fmtUSD(Math.round(c.buyPrice))} bold valueColor={C.text} />
                   <Row label="Refacción" value={fmtUSD(c.refCost)} sub={`${fmt(Math.round(c.refCost/m2))} USD/m²`} />
                   <Row label="Gastos de compra" value={fmtUSD(Math.round(c.closing))} />
+                  <Row label={`Expensas (${sellMonths} meses)`} value={fmtUSD(c.expensasTotal)} valueColor={c.expensasTotal > 0 ? C.red : C.textMuted} />
                   <Row label="TOTAL INVERTIDO" value={fmtUSD(Math.round(c.totalCost))} bold valueColor={C.amber} />
                 </div>
 
@@ -386,29 +452,59 @@ export default function FlipCalc() {
                 </div>
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
-                  <StatBox label="Ganancia neta" value={fmtUSD(Math.round(c.profit))}
+                  <StatBox label="Ganancia bruta" value={fmtUSD(Math.round(c.profit))}
                     color={c.profit > 0 ? C.green : C.red}
-                    tag={c.profit > 0 ? { label: "LONG", color: C.green, bg: C.greenDim, border: C.greenDim } : { label: "NEG", color: C.red, bg: C.redDim, border: C.redDim }} />
-                  <StatBox label="ROI total" value={`${c.roi.toFixed(2)}%`}
-                    color={c.roi > 10 ? C.green : C.red} />
+                    sub="sin descontar expensas" />
+                  <StatBox label="Ganancia neta" value={fmtUSD(Math.round(c.profitNeto))}
+                    color={c.profitNeto > 0 ? C.green : C.red}
+                    tag={c.profitNeto > 0 ? { label: "LONG", color: C.green, bg: C.greenDim, border: C.greenDim } : { label: "NEG", color: C.red, bg: C.redDim, border: C.redDim }}
+                    sub="descontando expensas" />
                 </div>
-                <StatBox label={`ROI anualizado · ${sellMonths} meses`}
-                  value={`${c.roiAnual.toFixed(2)}% anual`}
-                  color={c.roiAnual > 15 ? C.green : c.roiAnual > 0 ? C.amber : C.red}
-                  sub={`equivale a ${(c.roiAnual / 12).toFixed(2)}% mensual`} />
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+                  <StatBox label="ROI neto total" value={`${c.roiNeto?.toFixed(2)}%`}
+                    color={c.roiNeto > 10 ? C.green : C.red} />
+                  <StatBox label={`ROI neto anual`}
+                    value={`${c.roiNetoAnual?.toFixed(2)}%`}
+                    color={c.roiNetoAnual > 15 ? C.green : c.roiNetoAnual > 0 ? C.amber : C.red}
+                    sub={`${(c.roiNetoAnual / 12)?.toFixed(2)}% mensual`} />
+                </div>
 
                 {/* Veredicto */}
-                <div style={{ background: c.viable ? C.greenDim : C.redDim, border: `1px solid ${c.viable ? C.green : C.red}`, borderRadius: 6, padding: "16px 16px", marginTop: 12, marginBottom: 8 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: c.viable ? C.green : C.red, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8, fontFamily: C.mono }}>
-                    {c.viable ? "▶ OPERACIÓN VIABLE" : "✕ OPERACIÓN NO VIABLE"}
+                <div style={{ background: c.viableNeto ? C.greenDim : C.redDim, border: `1px solid ${c.viableNeto ? C.green : C.red}`, borderRadius: 6, padding: "16px 16px", marginTop: 4, marginBottom: 8 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: c.viableNeto ? C.green : C.red, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8, fontFamily: C.mono }}>
+                    {c.viableNeto ? "▶ OPERACIÓN VIABLE" : "✕ OPERACIÓN NO VIABLE"}
                   </div>
-                  <div style={{ fontSize: 14, color: c.viable ? "#A7F3D0" : "#FECACA", lineHeight: 1.7 }}>
-                    {c.viable
-                      ? `Compra: ${fmtUSD(Math.round(c.buyPrice))} → Venta: ${fmtUSD(c.arv)} → Ganancia: ${fmtUSD(Math.round(c.profit))} (${c.roi.toFixed(1)}% en ${sellMonths} meses)`
-                      : `Total invertido ${fmtUSD(Math.round(c.totalCost))} supera o deja margen insuficiente vs. ARV ${fmtUSD(c.arv)}.`
+                  <div style={{ fontSize: 14, color: c.viableNeto ? "#065F46" : "#991B1B", lineHeight: 1.7 }}>
+                    {c.viableNeto
+                      ? `Compra: ${fmtUSD(Math.round(c.buyPrice))} → Venta: ${fmtUSD(c.arv)} → Ganancia neta: ${fmtUSD(Math.round(c.profitNeto))} (${c.roiNeto?.toFixed(1)}% en ${sellMonths} meses)`
+                      : `Con estos números el flip no cierra. Total invertido ${fmtUSD(Math.round(c.totalCost))} + expensas ${fmtUSD(c.expensasTotal)} deja margen insuficiente.`
                     }
                   </div>
                 </div>
+
+                {/* Alquiler vs Venta */}
+                {c.alquilerMensual && (
+                  <>
+                    <SectionHeader title="Alquiler vs. Venta" mt={24} />
+                    <div style={{ background: C.panel, border: `1px solid ${C.border}`, borderRadius: 6, overflow: "hidden", marginBottom: 12 }}>
+                      <Row label="Ingreso mensual alquiler" value={fmtUSD(c.alquilerMensual)} valueColor={C.accent} bold />
+                      <Row label="Ingreso anual alquiler" value={fmtUSD(c.alquilerAnual)} valueColor={C.accent} />
+                      <Row label="ROI alquiler anual" value={`${c.alquilerROI?.toFixed(2)}%`} valueColor={c.alquilerROI > 5 ? C.green : C.amber} bold />
+                      <Row label="ROI flip neto anual" value={`${c.roiNetoAnual?.toFixed(2)}%`} valueColor={c.roiNetoAnual > 15 ? C.green : c.roiNetoAnual > 0 ? C.amber : C.red} bold />
+                    </div>
+                    <div style={{ background: c.roiNetoAnual > c.alquilerROI ? C.greenDim : C.accentDim, border: `1px solid ${c.roiNetoAnual > c.alquilerROI ? C.green : C.accent}`, borderRadius: 6, padding: "12px 16px", marginBottom: 16 }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: c.roiNetoAnual > c.alquilerROI ? C.green : C.accent, letterSpacing: "0.1em", fontFamily: C.mono, marginBottom: 6 }}>
+                        {c.roiNetoAnual > c.alquilerROI ? "▲ CONVIENE MÁS VENDER" : "▲ CONVIENE MÁS ALQUILAR"}
+                      </div>
+                      <div style={{ fontSize: 13, color: C.text, lineHeight: 1.6 }}>
+                        {c.roiNetoAnual > c.alquilerROI
+                          ? `El flip genera ${c.roiNetoAnual?.toFixed(1)}% anual vs. ${c.alquilerROI?.toFixed(1)}% del alquiler. Mejor vender y liberar el capital.`
+                          : `El alquiler genera ${c.alquilerROI?.toFixed(1)}% anual vs. ${c.roiNetoAnual?.toFixed(1)}% del flip. Considerá quedarte con la propiedad.`
+                        }
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 <SectionHeader title="Comparativa de mercado" mt={28} />
                 {(() => {
