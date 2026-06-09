@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { useAuth, useUser, SignIn, SignedIn, SignedOut, UserButton } from "@clerk/clerk-react";
 
 const fmt = (n) => new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 }).format(n);
 const fmtUSD = (n) => "USD " + fmt(n);
@@ -242,6 +243,16 @@ export default function FlipCalc() {
 
   return (
     <div style={{ minHeight: "100vh", background: C.bg, fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif", paddingBottom: 80, color: C.text }}>
+      <SignedOut>
+        <div style={{ minHeight: "100vh", background: C.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div style={{ marginBottom: 32, textAlign: "center" }}>
+            <div style={{ fontSize: 32, fontWeight: 700, color: C.text, letterSpacing: "-0.03em", marginBottom: 8 }}>flippar</div>
+            <div style={{ fontSize: 15, color: C.textMuted }}>Calculadora de Flipping Inmobiliario · CABA</div>
+          </div>
+          <SignIn routing="hash" />
+        </div>
+      </SignedOut>
+      <SignedIn>
       <style>{`
   * { -webkit-font-smoothing: antialiased; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif; }
@@ -253,7 +264,10 @@ export default function FlipCalc() {
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 17, fontWeight: 600, color: C.text, letterSpacing: "-0.02em" }}>Flippear</span>
           </div>
-          <span style={{ fontSize: 12, color: C.textMuted }}>{now}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <span style={{ fontSize: 12, color: C.textMuted }}>{now}</span>
+            <UserButton afterSignOutUrl="/" />
+          </div>
         </div>
 
         {/* Tabs */}
@@ -738,6 +752,7 @@ export default function FlipCalc() {
           </div>
         </div>
       )}
+      </SignedIn>
     </div>
   );
 }
