@@ -120,7 +120,9 @@ export default function FlipCalc() {
   const [closingPct, setClosingPct] = useState(5);
   const [sellCommPct, setSellCommPct] = useState(3);
   const [sellMonths, setSellMonths] = useState(8);
-  const [expensas, setExpensas] = useState(200);
+  const [expensas, setExpensas] = useState(150000);
+  const [expensasMoneda, setExpensasMoneda] = useState("ARS");
+  const [blueRate, setBlueRate] = useState(1300);
   const [alquilerM2, setAlquilerM2] = useState(0);
   const [barrioInput, setBarrioInput] = useState("");
   const [barrio, setBarrio] = useState(null);
@@ -166,7 +168,8 @@ export default function FlipCalc() {
     const viable      = profit > 0 && roi > 10;
     const discVsNuevo = arv && nuevoTotal ? ((nuevoTotal - arv) / nuevoTotal) * 100 : null;
     // Expensas durante tenencia
-    const expensasTotal = expensas * sellMonths;
+    const expensasUSD = expensasMoneda === "ARS" ? expensas / blueRate : expensas;
+    const expensasTotal = expensasUSD * sellMonths;
     const profitNeto = profit !== null ? profit - expensasTotal : null;
     const roiNeto = profitNeto !== null ? (profitNeto / totalCost) * 100 : null;
     const roiNetoAnual = roiNeto !== null ? (roiNeto / sellMonths) * 12 : null;
@@ -176,7 +179,7 @@ export default function FlipCalc() {
     const alquilerAnual = alquilerMensual ? alquilerMensual * 12 : null;
     const alquilerROI = alquilerAnual ? (alquilerAnual / totalCost) * 100 : null;
     return { buyPrice, refCost, closing, totalCost, arv, arvM2, nuevoTotal, sellComm, netSale, profit, roi, roiAnual, viable, discVsNuevo, usandoCustom, expensasTotal, profitNeto, roiNeto, roiNetoAnual, viableNeto, alquilerMensual, alquilerAnual, alquilerROI };
-  }, [listPrice, m2, negPct, refType, refExtra, closingPct, sellCommPct, sellMonths, barrio, customUsadoM2, customNuevoM2, expensas, alquilerM2]);
+  }, [listPrice, m2, negPct, refType, refExtra, closingPct, sellCommPct, sellMonths, barrio, customUsadoM2, customNuevoM2, expensas, expensasMoneda, blueRate, alquilerM2]);
 
   const filtered = Object.keys(BARRIOS).filter(b =>
     barrioInput.length > 0 && b.toLowerCase().includes(barrioInput.toLowerCase())
@@ -399,7 +402,49 @@ export default function FlipCalc() {
             <Slider label="Gastos de compra" min={2} max={10} step={0.5} value={closingPct} onChange={setClosingPct} suffix="%" />
             <Slider label="Comisión de venta" min={1} max={6} step={0.5} value={sellCommPct} onChange={setSellCommPct} suffix="%" />
             <Slider label="Plazo hasta venta" min={3} max={24} step={1} value={sellMonths} onChange={setSellMonths} suffix=" meses" />
-            <Slider label="Expensas mensuales" min={0} max={1000} step={50} value={expensas} onChange={setExpensas} prefix="USD " />
+            {/* Expensas */}
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: C.textSub, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 10 }}>Expensas mensuales</div>
+              <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+                {["ARS", "USD"].map(m => (
+                  <button key={m} onClick={() => setExpensasMoneda(m)} style={{
+                    padding: "7px 16px", fontSize: 12, fontWeight: 700,
+                    background: expensasMoneda === m ? C.accent : C.panelAlt,
+                    border: `1px solid ${expensasMoneda === m ? C.accent : C.border}`,
+                    borderRadius: 5, cursor: "pointer",
+                    color: expensasMoneda === m ? "#fff" : C.textSub,
+                    fontFamily: C.mono,
+                  }}>{m}</button>
+                ))}
+                <input
+                  type="number"
+                  value={expensas}
+                  onChange={e => setExpensas(Number(e.target.value) || 0)}
+                  style={{ flex: 1, padding: "7px 12px", background: C.panelAlt, border: `1px solid ${C.accent}`, borderRadius: 5, color: C.text, fontSize: 17, fontWeight: 700, fontFamily: C.mono, outline: "none", textAlign: "right" }}
+                />
+              </div>
+              {expensasMoneda === "ARS" && (
+                <div style={{ background: C.panelAlt, border: `1px solid ${C.border}`, borderRadius: 5, padding: "8px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <span style={{ fontSize: 11, color: C.textSub, fontFamily: C.mono }}>Dólar blue</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ fontSize: 12, color: C.textMuted, fontFamily: C.mono }}>$</span>
+                    <input
+                      type="number"
+                      value={blueRate}
+                      onChange={e => setBlueRate(Number(e.target.value) || 1)}
+                      style={{ width: 90, padding: "4px 8px", background: C.bg, border: `1px solid ${C.border}`, borderRadius: 4, color: C.text, fontSize: 14, fontWeight: 700, fontFamily: C.mono, outline: "none", textAlign: "right" }}
+                    />
+                    <span style={{ fontSize: 11, color: C.textMuted, fontFamily: C.mono }}>ARS/USD</span>
+                  </div>
+                </div>
+              )}
+              <div style={{ fontSize: 11, color: C.textMuted, fontFamily: C.mono, marginTop: 8 }}>
+                {expensasMoneda === "ARS"
+                  ? `→ USD ${(expensas / blueRate).toFixed(0)}/mes · USD ${(expensas / blueRate * sellMonths).toFixed(0)} en ${sellMonths} meses`
+                  : `→ USD ${fmt(expensas)}/mes · USD ${fmt(expensas * sellMonths)} en ${sellMonths} meses`
+                }
+              </div>
+            </div>
             <div style={{ marginBottom: 24 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: C.textSub, letterSpacing: "0.1em", textTransform: "uppercase" }}>Alquiler estimado / m²</span>
@@ -433,7 +478,7 @@ export default function FlipCalc() {
                   <Row label="Precio de compra" value={fmtUSD(Math.round(c.buyPrice))} bold valueColor={C.text} />
                   <Row label="Refacción" value={fmtUSD(c.refCost)} sub={`${fmt(Math.round(c.refCost/m2))} USD/m²`} />
                   <Row label="Gastos de compra" value={fmtUSD(Math.round(c.closing))} />
-                  <Row label={`Expensas (${sellMonths} meses)`} value={fmtUSD(c.expensasTotal)} valueColor={c.expensasTotal > 0 ? C.red : C.textMuted} />
+                  <Row label={`Expensas (${sellMonths} meses)`} value={fmtUSD(Math.round(c.expensasTotal))} valueColor={c.expensasTotal > 0 ? C.red : C.textMuted} sub={expensasMoneda === "ARS" ? `$ ${fmt(expensas)}/mes · blue $${fmt(blueRate)}` : undefined} />
                   <Row label="TOTAL INVERTIDO" value={fmtUSD(Math.round(c.totalCost))} bold valueColor={C.amber} />
                 </div>
 
