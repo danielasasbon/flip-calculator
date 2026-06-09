@@ -32,23 +32,23 @@ const BARRIOS = {
 const STORAGE_KEY = "flip-watchlist-v1";
 
 const C = {
-  bg:          "#F0F2F5",
+  bg:          "#F2F2F7",
   panel:       "#FFFFFF",
-  panelAlt:    "#F7F8FA",
-  border:      "#DDE1E8",
-  borderLight: "#C8CDD7",
-  accent:      "#1D6EF5",
-  accentDim:   "#EBF2FF",
-  text:        "#0D1117",
-  textSub:     "#5A6478",
-  textMuted:   "#9BA5B5",
-  green:       "#0A8A5C",
-  greenDim:    "#EAFAF3",
-  red:         "#D42B2B",
-  redDim:      "#FEF0F0",
-  amber:       "#C47D0A",
+  panelAlt:    "#F2F2F7",
+  border:      "#D1D1D6",
+  borderLight: "#C7C7CC",
+  accent:      "#007AFF",
+  accentDim:   "#EBF5FF",
+  text:        "#000000",
+  textSub:     "#3C3C43",
+  textMuted:   "#8E8E93",
+  green:       "#34C759",
+  greenDim:    "#F0FFF4",
+  red:         "#FF3B30",
+  redDim:      "#FFF1F0",
+  amber:       "#FF9500",
   amberDim:    "#FFF8EC",
-  mono:        "'JetBrains Mono', 'Courier New', monospace",
+  mono:        "-apple-system, 'SF Mono', 'Courier New', monospace",
 };
 
 const Tag = ({ children, color = C.textSub, bg = C.panelAlt, border = C.border }) => (
@@ -60,7 +60,7 @@ const Tag = ({ children, color = C.textSub, bg = C.panelAlt, border = C.border }
 const Divider = () => <div style={{ height: 1, background: C.border, margin: "20px 0" }} />;
 
 const Row = ({ label, value, valueColor = C.text, mono = true, bold = false, sub }) => (
-  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "9px 0", borderBottom: `1px solid ${C.border}` }}>
+  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "11px 0", borderBottom: `0.5px solid ${C.border}` }}>
     <span style={{ fontSize: 12, color: C.textSub, letterSpacing: "0.04em", textTransform: "uppercase" }}>{label}</span>
     <div style={{ textAlign: "right" }}>
       <span style={{ fontSize: bold ? 18 : 14, fontWeight: bold ? 700 : 600, color: valueColor, fontFamily: mono ? C.mono : "inherit", letterSpacing: bold ? "-0.02em" : "0" }}>
@@ -72,7 +72,7 @@ const Row = ({ label, value, valueColor = C.text, mono = true, bold = false, sub
 );
 
 const StatBox = ({ label, value, color = C.text, sub, tag }) => (
-  <div style={{ background: C.panel, border: `1px solid ${C.border}`, borderRadius: 6, padding: "14px 14px" }}>
+  <div style={{ background: C.panel, border: `0.5px solid ${C.border}`, borderRadius: 12, padding: "14px 16px" }}>
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
       <span style={{ fontSize: 10, fontWeight: 700, color: C.textSub, letterSpacing: "0.1em", textTransform: "uppercase" }}>{label}</span>
       {tag && <Tag color={tag.color} bg={tag.bg} border={tag.border}>{tag.label}</Tag>}
@@ -97,7 +97,7 @@ const Slider = ({ label, min, max, step, value, onChange, prefix = "", suffix = 
         <input type="range" min={min} max={max} step={step} value={value}
           onChange={(e) => onChange(Number(e.target.value))}
           style={{ position: "absolute", top: "50%", left: 0, width: "100%", transform: "translateY(-50%)", opacity: 0, cursor: "pointer", height: 20, margin: 0 }} />
-        <div style={{ position: "absolute", top: "50%", left: `${pct}%`, transform: "translate(-50%, -50%)", width: 14, height: 14, borderRadius: "50%", background: C.accent, border: `2px solid ${C.panel}`, pointerEvents: "none" }} />
+        <div style={{ position: "absolute", top: "50%", left: `${pct}%`, transform: "translate(-50%, -50%)", width: 14, height: 14, borderRadius: "50%", background: C.panel, border: `2px solid ${C.accent}`, boxShadow: "0 1px 4px rgba(0,0,0,0.15)", pointerEvents: "none" }} />
       </div>
     </div>
   );
@@ -105,7 +105,7 @@ const Slider = ({ label, min, max, step, value, onChange, prefix = "", suffix = 
 
 const SectionHeader = ({ title, sub, mt = 28 }) => (
   <div style={{ marginTop: mt, marginBottom: 16, paddingBottom: 10, borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-    <span style={{ fontSize: 11, fontWeight: 700, color: C.accent, letterSpacing: "0.12em", textTransform: "uppercase" }}>{title}</span>
+    <span style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, letterSpacing: "0.04em", textTransform: "uppercase", fontSize: 12 }}>{title}</span>
     {sub && <span style={{ fontSize: 10, color: C.textMuted }}>{sub}</span>}
   </div>
 );
@@ -220,7 +220,7 @@ export default function FlipCalc() {
     background: C.panelAlt,
     border: `1px solid ${active ? C.accent : C.border}`,
     borderRadius: 6, color: C.text, fontSize: 15,
-    fontFamily: "'Inter', sans-serif", outline: "none",
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif", outline: "none",
   });
 
   const Bar = ({ label, val, pct, color, bold, sub }) => (
@@ -241,18 +241,19 @@ export default function FlipCalc() {
   const now = new Date().toLocaleString("es-AR", { day:"2-digit", month:"2-digit", year:"2-digit", hour:"2-digit", minute:"2-digit" });
 
   return (
-    <div style={{ minHeight: "100vh", background: C.bg, fontFamily: "'Inter', sans-serif", paddingBottom: 80, color: C.text }}>
-      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+    <div style={{ minHeight: "100vh", background: C.bg, fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif", paddingBottom: 80, color: C.text }}>
+      <style>{`
+  * { -webkit-font-smoothing: antialiased; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif; }
+`}</style>
 
       {/* Top bar */}
-      <div style={{ background: C.panel, borderBottom: `1px solid ${C.border}`, padding: "0 20px" }}>
+      <div style={{ background: "rgba(242,242,247,0.92)", borderBottom: `0.5px solid ${C.border}`, padding: "0 20px", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: 44 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.accent, boxShadow: `0 0 6px ${C.accent}` }} />
-            <span style={{ fontSize: 11, fontWeight: 700, color: C.text, letterSpacing: "0.15em", textTransform: "uppercase" }}>FLIP · CABA</span>
-            <Tag color={C.accent} bg={C.accentDim} border={C.accentDim}>2026</Tag>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 17, fontWeight: 600, color: C.text, letterSpacing: "-0.02em" }}>Flippear</span>
           </div>
-          <span style={{ fontSize: 10, color: C.textMuted, fontFamily: C.mono }}>{now}</span>
+          <span style={{ fontSize: 12, color: C.textMuted }}>{now}</span>
         </div>
 
         {/* Tabs */}
@@ -264,7 +265,7 @@ export default function FlipCalc() {
               borderBottom: `2px solid ${tab === key ? C.accent : "transparent"}`,
               color: tab === key ? C.accent : C.textMuted,
               cursor: "pointer", letterSpacing: "0.1em",
-              fontFamily: "'Inter', sans-serif", transition: "all 0.15s",
+              fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif", transition: "all 0.15s",
             }}>{label}</button>
           ))}
         </div>
@@ -284,7 +285,7 @@ export default function FlipCalc() {
                   type="number"
                   value={listPrice}
                   onChange={e => setListPrice(Number(e.target.value) || 0)}
-                  style={{ width: 130, padding: "4px 8px", background: C.panelAlt, border: `1px solid ${C.accent}`, borderRadius: 5, color: C.text, fontSize: 17, fontWeight: 700, fontFamily: C.mono, outline: "none", textAlign: "right" }}
+                  style={{ width: 130, padding: "4px 8px", background: C.panelAlt, border: `1px solid ${C.accent}`, borderRadius: 10, color: C.text, fontSize: 17, fontWeight: 600, fontFamily: C.mono, outline: "none", textAlign: "right" }}
                 />
               </div>
               <div style={{ position: "relative", height: 3, background: C.border, borderRadius: 2 }}>
@@ -292,7 +293,7 @@ export default function FlipCalc() {
                 <input type="range" min={30000} max={400000} step={1000} value={Math.min(listPrice, 400000)}
                   onChange={e => setListPrice(Number(e.target.value))}
                   style={{ position: "absolute", top: "50%", left: 0, width: "100%", transform: "translateY(-50%)", opacity: 0, cursor: "pointer", height: 20, margin: 0 }} />
-                <div style={{ position: "absolute", top: "50%", left: `${Math.min(((listPrice - 30000) / (400000 - 30000)) * 100, 100)}%`, transform: "translate(-50%, -50%)", width: 14, height: 14, borderRadius: "50%", background: C.accent, border: `2px solid ${C.panel}`, pointerEvents: "none" }} />
+                <div style={{ position: "absolute", top: "50%", left: `${Math.min(((listPrice - 30000) / (400000 - 30000)) * 100, 100)}%`, transform: "translate(-50%, -50%)", width: 14, height: 14, borderRadius: "50%", background: C.panel, border: `2px solid ${C.accent}`, boxShadow: "0 1px 4px rgba(0,0,0,0.15)", pointerEvents: "none" }} />
               </div>
             </div>
             <Slider label="Descuento negociación" min={0} max={20} step={1} value={negPct} onChange={setNegPct} suffix="%" />
@@ -310,7 +311,7 @@ export default function FlipCalc() {
                     type="number"
                     value={m2}
                     onChange={e => setM2(Number(e.target.value) || 0)}
-                    style={{ width: 80, padding: "4px 8px", background: C.panelAlt, border: `1px solid ${C.accent}`, borderRadius: 5, color: C.text, fontSize: 17, fontWeight: 700, fontFamily: C.mono, outline: "none", textAlign: "right" }}
+                    style={{ width: 80, padding: "4px 8px", background: C.panelAlt, border: `1px solid ${C.accent}`, borderRadius: 10, color: C.text, fontSize: 17, fontWeight: 600, fontFamily: C.mono, outline: "none", textAlign: "right" }}
                   />
                   <span style={{ fontSize: 14, fontWeight: 700, color: C.textSub, fontFamily: C.mono }}>m²</span>
                 </div>
@@ -320,7 +321,7 @@ export default function FlipCalc() {
                 <input type="range" min={25} max={200} step={1} value={Math.min(m2, 200)}
                   onChange={e => setM2(Number(e.target.value))}
                   style={{ position: "absolute", top: "50%", left: 0, width: "100%", transform: "translateY(-50%)", opacity: 0, cursor: "pointer", height: 20, margin: 0 }} />
-                <div style={{ position: "absolute", top: "50%", left: `${Math.min(((m2 - 25) / (200 - 25)) * 100, 100)}%`, transform: "translate(-50%, -50%)", width: 14, height: 14, borderRadius: "50%", background: C.accent, border: `2px solid ${C.panel}`, pointerEvents: "none" }} />
+                <div style={{ position: "absolute", top: "50%", left: `${Math.min(((m2 - 25) / (200 - 25)) * 100, 100)}%`, transform: "translate(-50%, -50%)", width: 14, height: 14, borderRadius: "50%", background: C.panel, border: `2px solid ${C.accent}`, boxShadow: "0 1px 4px rgba(0,0,0,0.15)", pointerEvents: "none" }} />
               </div>
             </div>
 
@@ -389,7 +390,7 @@ export default function FlipCalc() {
                     border: `1px solid ${refType === k ? C.accent : C.border}`,
                     borderRadius: 6, cursor: "pointer",
                     color: refType === k ? "#fff" : C.textSub,
-                    fontFamily: "'Inter', sans-serif", transition: "all 0.15s",
+                    fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif", transition: "all 0.15s",
                   }}>
                     <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.04em" }}>{refLabels[k]}</div>
                     <div style={{ fontSize: 10, marginTop: 3, opacity: 0.7, fontFamily: C.mono }}>{refDesc[k]}</div>
@@ -420,7 +421,7 @@ export default function FlipCalc() {
                   type="number"
                   value={expensas}
                   onChange={e => setExpensas(Number(e.target.value) || 0)}
-                  style={{ flex: 1, padding: "7px 12px", background: C.panelAlt, border: `1px solid ${C.accent}`, borderRadius: 5, color: C.text, fontSize: 17, fontWeight: 700, fontFamily: C.mono, outline: "none", textAlign: "right" }}
+                  style={{ flex: 1, padding: "7px 12px", background: C.panelAlt, border: `1px solid ${C.accent}`, borderRadius: 10, color: C.text, fontSize: 17, fontWeight: 600, fontFamily: C.mono, outline: "none", textAlign: "right" }}
                 />
               </div>
               {expensasMoneda === "ARS" && (
@@ -454,7 +455,7 @@ export default function FlipCalc() {
                     value={alquilerM2}
                     onChange={e => setAlquilerM2(Number(e.target.value) || 0)}
                     placeholder="0"
-                    style={{ width: 80, padding: "4px 8px", background: alquilerM2 > 0 ? C.accentDim : C.panelAlt, border: `1px solid ${alquilerM2 > 0 ? C.accent : C.border}`, borderRadius: 5, color: C.text, fontSize: 17, fontWeight: 700, fontFamily: C.mono, outline: "none", textAlign: "right" }}
+                    style={{ width: 80, padding: "4px 8px", background: alquilerM2 > 0 ? C.accentDim : C.panelAlt, border: `1px solid ${alquilerM2 > 0 ? C.accent : C.border}`, borderRadius: 10, color: C.text, fontSize: 17, fontWeight: 600, fontFamily: C.mono, outline: "none", textAlign: "right" }}
                   />
                   <span style={{ fontSize: 14, fontWeight: 700, color: C.textSub, fontFamily: C.mono }}>USD/m²</span>
                 </div>
@@ -472,7 +473,7 @@ export default function FlipCalc() {
             ) : (
               <>
                 <SectionHeader title="Estructura de costos" />
-                <div style={{ background: C.panel, border: `1px solid ${C.border}`, borderRadius: 6, overflow: "hidden", marginBottom: 20 }}>
+                <div style={{ background: C.panel, border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden", marginBottom: 20 }}>
                   <Row label="Precio de publicación" value={fmtUSD(listPrice)} />
                   <Row label={`Descuento (−${negPct}%)`} value={`− ${fmtUSD(Math.round(listPrice * negPct / 100))}`} valueColor={C.green} />
                   <Row label="Precio de compra" value={fmtUSD(Math.round(c.buyPrice))} bold valueColor={C.text} />
@@ -483,7 +484,7 @@ export default function FlipCalc() {
                 </div>
 
                 <SectionHeader title={`ARV · ${barrio}`} sub={c.usandoCustom ? "PRECIO RELEVADO" : "REF 2026"} />
-                <div style={{ background: C.panel, border: `1px solid ${C.green}`, borderRadius: 6, padding: "18px 16px", marginBottom: 16, position: "relative", overflow: "hidden" }}>
+                <div style={{ background: C.panel, border: `1px solid ${C.green}`, borderRadius: 12, padding: "18px 16px", marginBottom: 16, position: "relative", overflow: "hidden" }}>
                   <div style={{ position: "absolute", top: 0, left: 0, width: 3, height: "100%", background: C.green }} />
                   <div style={{ fontSize: 11, fontWeight: 700, color: C.green, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>
                     Valor post-refacción (ARV)
@@ -515,7 +516,7 @@ export default function FlipCalc() {
                 </div>
 
                 {/* Veredicto */}
-                <div style={{ background: c.viableNeto ? C.greenDim : C.redDim, border: `1px solid ${c.viableNeto ? C.green : C.red}`, borderRadius: 6, padding: "16px 16px", marginTop: 4, marginBottom: 8 }}>
+                <div style={{ background: c.viableNeto ? C.greenDim : C.redDim, border: `1px solid ${c.viableNeto ? C.green : C.red}`, borderRadius: 12, padding: "16px 16px", marginTop: 4, marginBottom: 8 }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: c.viableNeto ? C.green : C.red, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8, fontFamily: C.mono }}>
                     {c.viableNeto ? "▶ OPERACIÓN VIABLE" : "✕ OPERACIÓN NO VIABLE"}
                   </div>
@@ -537,7 +538,7 @@ export default function FlipCalc() {
                       <Row label="ROI alquiler anual" value={`${c.alquilerROI?.toFixed(2)}%`} valueColor={c.alquilerROI > 5 ? C.green : C.amber} bold />
                       <Row label="ROI flip neto anual" value={`${c.roiNetoAnual?.toFixed(2)}%`} valueColor={c.roiNetoAnual > 15 ? C.green : c.roiNetoAnual > 0 ? C.amber : C.red} bold />
                     </div>
-                    <div style={{ background: c.roiNetoAnual > c.alquilerROI ? C.greenDim : C.accentDim, border: `1px solid ${c.roiNetoAnual > c.alquilerROI ? C.green : C.accent}`, borderRadius: 6, padding: "12px 16px", marginBottom: 16 }}>
+                    <div style={{ background: c.roiNetoAnual > c.alquilerROI ? C.greenDim : C.accentDim, border: `1px solid ${c.roiNetoAnual > c.alquilerROI ? C.green : C.accent}`, borderRadius: 12, padding: "12px 16px", marginBottom: 16 }}>
                       <div style={{ fontSize: 12, fontWeight: 700, color: c.roiNetoAnual > c.alquilerROI ? C.green : C.accent, letterSpacing: "0.1em", fontFamily: C.mono, marginBottom: 6 }}>
                         {c.roiNetoAnual > c.alquilerROI ? "▲ CONVIENE MÁS VENDER" : "▲ CONVIENE MÁS ALQUILAR"}
                       </div>
@@ -557,16 +558,16 @@ export default function FlipCalc() {
                   const flipMasBajo = c.arv < c.nuevoTotal;
                   return (
                     <>
-                      <div style={{ background: C.panel, border: `1px solid ${C.border}`, borderRadius: 6, padding: "16px 16px", marginBottom: 12 }}>
+                      <div style={{ background: C.panel, border: `1px solid ${C.border}`, borderRadius: 12, padding: "16px 16px", marginBottom: 12 }}>
                         <Bar label="Costo total flip" val={c.totalCost} pct={(c.totalCost/maxVal)*100} color={C.textMuted} sub={`${fmt(Math.round(c.totalCost/m2))} USD/m²`} />
                         <Bar label="ARV · reciclado" val={c.arv} pct={(c.arv/maxVal)*100} color={C.green} bold sub={`${fmt(Math.round(c.arv/m2))} USD/m²`} />
                         <Bar label="Nuevo en barrio" val={c.nuevoTotal} pct={(c.nuevoTotal/maxVal)*100} color={C.accent} sub={`${fmt(Math.round(c.nuevoTotal/m2))} USD/m²`} />
                       </div>
-                      <div style={{ background: flipMasBajo ? C.greenDim : C.amberDim, border: `1px solid ${flipMasBajo ? C.green : C.amber}`, borderRadius: 6, padding: "12px 16px", marginBottom: 16 }}>
+                      <div style={{ background: flipMasBajo ? C.greenDim : C.amberDim, border: `1px solid ${flipMasBajo ? C.green : C.amber}`, borderRadius: 12, padding: "12px 16px", marginBottom: 16 }}>
                         <div style={{ fontSize: 12, fontWeight: 700, color: flipMasBajo ? C.green : C.amber, letterSpacing: "0.1em", fontFamily: C.mono, marginBottom: 6 }}>
                           {flipMasBajo ? `▲ RECICLADO ${c.discVsNuevo?.toFixed(0)}% DEBAJO DEL NUEVO` : "▼ ARV SUPERA AL NUEVO"}
                         </div>
-                        <div style={{ fontSize: 13, color: flipMasBajo ? "#065F46" : "#78350F", lineHeight: 1.6 }}>
+                        <div style={{ fontSize: 13, color: flipMasBajo ? "#166534" : "#92400E", lineHeight: 1.6 }}>
                           {flipMasBajo
                             ? `El comprador ahorra ${fmtUSD(Math.round(c.nuevoTotal - c.arv))} eligiendo tu reciclado vs. nuevo en ${barrio}.`
                             : `Un depto nuevo en ${barrio} es más barato. Revisá el precio de compra.`
@@ -578,7 +579,7 @@ export default function FlipCalc() {
                 })()}
 
                 {/* Stats barrio */}
-                <div style={{ background: C.panel, border: `1px solid ${C.border}`, borderRadius: 6, overflow: "hidden", marginBottom: 20 }}>
+                <div style={{ background: C.panel, border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden", marginBottom: 20 }}>
                   <div style={{ padding: "10px 14px", borderBottom: `1px solid ${C.border}`, display: "grid", gridTemplateColumns: "1fr 1fr 1fr" }}>
                     {[
                       { label: "USADO/m²", val: `${fmt(barrioData.usado)} USD` },
@@ -614,9 +615,9 @@ export default function FlipCalc() {
                   width: "100%", padding: "14px",
                   background: C.accent, border: "none", borderRadius: 6,
                   cursor: "pointer", color: "#fff", fontWeight: 700, fontSize: 14,
-                  fontFamily: "'Inter', sans-serif", letterSpacing: "0.08em", textTransform: "uppercase",
+                  fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif", letterSpacing: "0.08em", textTransform: "uppercase",
                 }}>
-                  + GUARDAR EN WATCHLIST
+                  Guardar en Watchlist
                 </button>
               </>
             )}
@@ -637,7 +638,7 @@ export default function FlipCalc() {
                   {watchlist.length} REGISTRO{watchlist.length !== 1 ? "S" : ""} · ORDENADO POR ROI ANUAL DESC
                 </div>
                 {watchlist.map((w, i) => (
-                  <div key={w.id} style={{ background: C.panel, border: `1px solid ${i === 0 ? C.accent : C.border}`, borderRadius: 6, marginBottom: 14, overflow: "hidden", position: "relative" }}>
+                  <div key={w.id} style={{ background: C.panel, border: `1px solid ${i === 0 ? C.accent : C.border}`, borderRadius: 12, marginBottom: 14, overflow: "hidden", position: "relative" }}>
                     {/* Header tarjeta */}
                     <div style={{ padding: "12px 14px", borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: i === 0 ? C.accentDim : "transparent" }}>
                       <div>
@@ -701,8 +702,8 @@ export default function FlipCalc() {
       {showSaveModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.35)", zIndex: 100, display: "flex", alignItems: "flex-end", justifyContent: "center" }}
           onClick={(e) => { if (e.target === e.currentTarget) setShowSaveModal(false); }}>
-          <div style={{ background: C.panel, border: `1px solid ${C.border}`, borderRadius: "12px 12px 0 0", padding: "24px 20px 48px", width: "100%", maxWidth: 520 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: C.accent, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 20 }}>+ Guardar en Watchlist</div>
+          <div style={{ background: C.panel, border: `1px solid ${C.border}`, borderRadius: "20px 20px 0 0", padding: "24px 20px 48px", width: "100%", maxWidth: 520 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.textMuted, letterSpacing: "0.04em", textTransform: "uppercase", fontSize: 12, marginBottom: 20 }}>Guardar en Watchlist</div>
 
             {[
               { label: "NOMBRE / DESCRIPCIÓN *", val: saveName, set: setSaveName, placeholder: "Ej: 3A Thames 1200 Palermo" },
@@ -711,7 +712,7 @@ export default function FlipCalc() {
               <div key={label} style={{ marginBottom: 14 }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: C.textSub, letterSpacing: "0.1em", marginBottom: 6 }}>{label}</div>
                 <input value={val} onChange={e => set(e.target.value)} placeholder={placeholder}
-                  style={{ width: "100%", padding: "12px 14px", boxSizing: "border-box", background: C.bg, border: `1px solid ${C.border}`, borderRadius: 6, color: C.text, fontSize: 14, fontFamily: "'Inter', sans-serif", outline: "none" }} />
+                  style={{ width: "100%", padding: "12px 14px", boxSizing: "border-box", background: C.bg, border: `1px solid ${C.border}`, borderRadius: 6, color: C.text, fontSize: 14, fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif", outline: "none" }} />
               </div>
             ))}
 
@@ -719,7 +720,7 @@ export default function FlipCalc() {
               <div style={{ fontSize: 10, fontWeight: 700, color: C.textSub, letterSpacing: "0.1em", marginBottom: 6 }}>NOTAS</div>
               <textarea value={saveNotas} onChange={e => setSaveNotas(e.target.value)} rows={2}
                 placeholder="Observaciones adicionales..."
-                style={{ width: "100%", padding: "12px 14px", boxSizing: "border-box", background: C.bg, border: `1px solid ${C.border}`, borderRadius: 6, color: C.text, fontSize: 14, fontFamily: "'Inter', sans-serif", outline: "none", resize: "none" }} />
+                style={{ width: "100%", padding: "12px 14px", boxSizing: "border-box", background: C.bg, border: `1px solid ${C.border}`, borderRadius: 6, color: C.text, fontSize: 14, fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif", outline: "none", resize: "none" }} />
             </div>
 
             <div style={{ padding: "10px 14px", background: C.accentDim, border: `1px solid ${C.accent}`, borderRadius: 6, marginBottom: 20, fontSize: 12, color: C.textSub, fontFamily: C.mono }}>
@@ -727,10 +728,10 @@ export default function FlipCalc() {
             </div>
 
             <div style={{ display: "flex", gap: 10 }}>
-              <button onClick={() => setShowSaveModal(false)} style={{ flex: 1, padding: "13px", background: "transparent", border: `1px solid ${C.border}`, borderRadius: 6, cursor: "pointer", color: C.textSub, fontSize: 13, fontWeight: 700, fontFamily: "'Inter', sans-serif", letterSpacing: "0.06em" }}>
+              <button onClick={() => setShowSaveModal(false)} style={{ flex: 1, padding: "13px", background: "transparent", border: `1px solid ${C.border}`, borderRadius: 6, cursor: "pointer", color: C.textSub, fontSize: 13, fontWeight: 700, fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif", letterSpacing: "0.06em" }}>
                 CANCELAR
               </button>
-              <button onClick={handleSave} disabled={!saveName.trim()} style={{ flex: 2, padding: "13px", background: saveName.trim() ? C.accent : C.border, border: "none", borderRadius: 6, cursor: saveName.trim() ? "pointer" : "default", color: saveName.trim() ? "#fff" : C.textMuted, fontWeight: 700, fontSize: 13, fontFamily: "'Inter', sans-serif", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+              <button onClick={handleSave} disabled={!saveName.trim()} style={{ flex: 2, padding: "13px", background: saveName.trim() ? C.accent : C.border, border: "none", borderRadius: 6, cursor: saveName.trim() ? "pointer" : "default", color: saveName.trim() ? "#fff" : C.textMuted, fontWeight: 700, fontSize: 13, fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif", letterSpacing: "0.08em", textTransform: "uppercase" }}>
                 GUARDAR
               </button>
             </div>
