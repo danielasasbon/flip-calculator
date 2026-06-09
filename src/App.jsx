@@ -1,5 +1,4 @@
 import { useState, useMemo, useEffect } from "react";
-import { useAuth, useUser, SignIn, SignedIn, SignedOut, UserButton } from "@clerk/clerk-react";
 
 const fmt = (n) => new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 }).format(n);
 const fmtUSD = (n) => "USD " + fmt(n);
@@ -112,6 +111,11 @@ const SectionHeader = ({ title, sub, mt = 28 }) => (
 );
 
 export default function FlipCalc() {
+  const [loggedIn, setLoggedIn] = useState(() => !!sessionStorage.getItem("flippar_user"));
+  const [loginUser, setLoginUser] = useState("");
+  const [loginPass, setLoginPass] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [currentUser, setCurrentUser] = useState(() => sessionStorage.getItem("flippar_user") || "");
   const [tab, setTab] = useState("calc");
   const [listPrice, setListPrice] = useState(120000);
   const [m2, setM2] = useState(55);
@@ -241,18 +245,72 @@ export default function FlipCalc() {
 
   const now = new Date().toLocaleString("es-AR", { day:"2-digit", month:"2-digit", year:"2-digit", hour:"2-digit", minute:"2-digit" });
 
+  const USERS = {
+    "Daniela": "dani0812",
+    "Juliana": "bejsof",
+    "Varios": "1234",
+    "Admin": "fjjDani0812",
+  };
+
+  const handleLogin = () => {
+    if (USERS[loginUser] && USERS[loginUser] === loginPass) {
+      sessionStorage.setItem("flippar_user", loginUser);
+      setCurrentUser(loginUser);
+      setLoggedIn(true);
+      setLoginError("");
+    } else {
+      setLoginError("Usuario o contraseña incorrectos");
+    }
+  };
+
+  const handleLogout = () => {
+    sessionStorage.removeItem("flippar_user");
+    setLoggedIn(false);
+    setCurrentUser("");
+    setLoginUser("");
+    setLoginPass("");
+  };
+
+  if (!loggedIn) return (
+    <div style={{ minHeight: "100vh", background: C.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24, fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif" }}>
+      <div style={{ width: "100%", maxWidth: 340 }}>
+        <div style={{ textAlign: "center", marginBottom: 40 }}>
+          <div style={{ fontSize: 36, fontWeight: 700, color: C.text, letterSpacing: "-0.03em", marginBottom: 8 }}>flippar</div>
+          <div style={{ fontSize: 15, color: C.textMuted }}>Calculadora de Flipping · CABA</div>
+        </div>
+        <div style={{ background: C.panel, borderRadius: 16, padding: 24, boxShadow: "0 2px 20px rgba(0,0,0,0.08)" }}>
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Usuario</div>
+            <input
+              value={loginUser}
+              onChange={e => setLoginUser(e.target.value)}
+              placeholder="Tu nombre de usuario"
+              style={{ width: "100%", padding: "12px 14px", boxSizing: "border-box", background: C.bg, border: `1.5px solid ${C.border}`, borderRadius: 10, fontSize: 16, color: C.text, outline: "none", fontFamily: "inherit" }}
+            />
+          </div>
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Contraseña</div>
+            <input
+              type="password"
+              value={loginPass}
+              onChange={e => setLoginPass(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && handleLogin()}
+              placeholder="••••••••"
+              style={{ width: "100%", padding: "12px 14px", boxSizing: "border-box", background: C.bg, border: `1.5px solid ${C.border}`, borderRadius: 10, fontSize: 16, color: C.text, outline: "none", fontFamily: "inherit" }}
+            />
+          </div>
+          {loginError && <div style={{ fontSize: 13, color: C.red, marginBottom: 14, textAlign: "center" }}>{loginError}</div>}
+          <button onClick={handleLogin} style={{ width: "100%", padding: 14, background: C.accent, border: "none", borderRadius: 12, color: "#fff", fontSize: 16, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+            Ingresar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div style={{ minHeight: "100vh", background: C.bg, fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif", paddingBottom: 80, color: C.text }}>
-      <SignedOut>
-        <div style={{ minHeight: "100vh", background: C.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-          <div style={{ marginBottom: 32, textAlign: "center" }}>
-            <div style={{ fontSize: 32, fontWeight: 700, color: C.text, letterSpacing: "-0.03em", marginBottom: 8 }}>flippar</div>
-            <div style={{ fontSize: 15, color: C.textMuted }}>Calculadora de Flipping Inmobiliario · CABA</div>
-          </div>
-          <SignIn routing="hash" />
-        </div>
-      </SignedOut>
-      <SignedIn>
+
       <style>{`
   * { -webkit-font-smoothing: antialiased; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif; }
@@ -265,8 +323,8 @@ export default function FlipCalc() {
             <span style={{ fontSize: 17, fontWeight: 600, color: C.text, letterSpacing: "-0.02em" }}>Flippear</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <span style={{ fontSize: 12, color: C.textMuted }}>{now}</span>
-            <UserButton afterSignOutUrl="/" />
+            <span style={{ fontSize: 12, color: C.textMuted }}>{currentUser}</span>
+            <button onClick={handleLogout} style={{ fontSize: 12, color: C.accent, background: "transparent", border: "none", cursor: "pointer", fontFamily: "inherit", fontWeight: 600 }}>Salir</button>
           </div>
         </div>
 
@@ -752,7 +810,6 @@ export default function FlipCalc() {
           </div>
         </div>
       )}
-      </SignedIn>
     </div>
   );
 }
