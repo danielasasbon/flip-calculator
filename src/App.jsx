@@ -388,10 +388,15 @@ export default function FlipCalc() {
             </div>
             <Slider label="Descuento negociación" min={0} max={20} step={1} value={negPct} onChange={setNegPct} suffix="%" />
 
-            <div style={{ background: C.accentDim, border: `1px solid ${C.accent}`, borderRadius: 6, padding: "12px 16px", marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ background: C.accentDim, border: `1px solid ${C.accent}`, borderRadius: 6, padding: "12px 16px", marginBottom: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontSize: 11, fontWeight: 700, color: C.accent, letterSpacing: "0.1em", textTransform: "uppercase" }}>Precio de compra</span>
               <span style={{ fontSize: 22, fontWeight: 700, color: C.text, fontFamily: C.mono }}>{fmtUSD(Math.round(c.buyPrice))}</span>
             </div>
+            {m2 > 0 && (
+              <div style={{ fontSize: 12, color: C.textMuted, textAlign: "right", marginBottom: 24, fontFamily: C.mono }}>
+                = {fmtUSD(Math.round(c.buyPrice / m2))}/m² al comprar
+              </div>
+            )}
 
             <div style={{ marginBottom: 24 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
@@ -589,6 +594,28 @@ export default function FlipCalc() {
                   </div>
                   <div style={{ fontSize: 12, color: C.textSub, marginTop: 8, fontFamily: C.mono }}>
                     {fmt(c.arvM2)} USD/m² × {m2} m²
+                  </div>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
+                  <div style={{ background: C.panelAlt, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>m² antes (compra)</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: C.text, fontFamily: C.mono }}>{fmtUSD(Math.round(c.buyPrice / m2))}</div>
+                  </div>
+                  <div style={{ background: C.greenDim, border: `1px solid ${C.green}`, borderRadius: 10, padding: "12px 14px" }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: C.green, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>m² después (venta)</div>
+                    <div style={{ position: "relative" }}>
+                      <input
+                        type="number"
+                        value={customUsadoM2}
+                        onChange={e => setCustomUsadoM2(e.target.value)}
+                        placeholder={String(c.arvM2)}
+                        style={{ width: "100%", boxSizing: "border-box", padding: "0", background: "transparent", border: "none", color: C.text, fontSize: 18, fontWeight: 700, fontFamily: C.mono, outline: "none" }}
+                      />
+                      {customUsadoM2 && (
+                        <button onClick={() => setCustomUsadoM2("")} style={{ position: "absolute", right: 0, top: "50%", transform: "translateY(-50%)", background: "transparent", border: "none", color: C.textMuted, cursor: "pointer", fontSize: 12 }}>✕</button>
+                      )}
+                    </div>
                   </div>
                 </div>
 
