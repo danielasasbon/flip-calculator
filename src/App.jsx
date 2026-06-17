@@ -783,12 +783,12 @@ export default function FlipCalc() {
                       {w.nuevo_total && <Row label="Nuevo en barrio" value={fmtUSD(w.nuevo_total)} valueColor={C.accent} />}
                       {w.disc_vs_nuevo != null && (
                         <Row label="ARV vs nuevo"
-                          value={w.disc_vs_nuevo > 0 ? `−${w.disc_vs_nuevo.toFixed(0)}%` : `+${Math.abs(w.disc_vs_nuevo).toFixed(0)}%`}
+                          value={w.disc_vs_nuevo != null ? (w.disc_vs_nuevo > 0 ? `−${w.disc_vs_nuevo.toFixed(0)}%` : `+${Math.abs(w.disc_vs_nuevo).toFixed(0)}%`) : "—"}
                           valueColor={w.disc_vs_nuevo > 0 ? C.green : C.red} />
                       )}
                       <Row label="Ganancia" value={fmtUSD(w.profit)} valueColor={w.profit > 0 ? C.green : C.red} />
-                      <Row label="ROI total" value={`${w.roi.toFixed(2)}%`} valueColor={w.roi > 10 ? C.green : C.red} />
-                      <Row label="ROI anualizado" value={`${w.roi_anual.toFixed(2)}%`} valueColor={w.roi_anual > 15 ? C.green : w.roi_anual > 0 ? C.amber : C.red} bold />
+                      <Row label="ROI total" value={w.roi != null ? `${w.roi.toFixed(2)}%` : "—"} valueColor={w.roi > 10 ? C.green : C.red} />
+                      <Row label="ROI anualizado" value={w.roi_anual != null ? `${w.roi_anual.toFixed(2)}%` : "—"} valueColor={w.roi_anual > 15 ? C.green : w.roi_anual > 0 ? C.amber : C.red} bold />
                     </div>
 
                     {/* Footer */}
