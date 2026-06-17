@@ -212,25 +212,38 @@ export default function FlipCalc() {
   const handleSave = async () => {
     if (!barrio || !saveName.trim()) return;
     const entry = {
-      id: Date.now(), nombre: saveName.trim(), link: saveLink.trim(), notas: saveNotas.trim(),
-      barrio, m2, listPrice, negPct, refType,
-      buyPrice: Math.round(c.buyPrice), totalCost: Math.round(c.totalCost),
-      arv: c.arv, nuevoTotal: c.nuevoTotal, discVsNuevo: c.discVsNuevo,
-      profit: Math.round(c.profit), roi: c.roi, roiAnual: c.roiAnual, viable: c.viable,
+      usuario: currentUser,
+      nombre: saveName.trim(),
+      link: saveLink.trim(),
+      notas: saveNotas.trim(),
+      barrio, m2,
+      list_price: listPrice,
+      ref_type: refType,
+      arv: c.arv,
+      nuevo_total: c.nuevoTotal,
+      disc_vs_nuevo: c.discVsNuevo,
+      profit: Math.round(c.profit),
+      roi: c.roi,
+      roi_anual: c.roiAnual,
+      viable: c.viable,
       fecha: new Date().toLocaleDateString("es-AR"),
+      datos: { buyPrice: Math.round(c.buyPrice), totalCost: Math.round(c.totalCost), negPct },
     };
-    const newList = [entry, ...watchlist].sort((a, b) => b.roiAnual - a.roiAnual);
-    setWatchlist(newList);
-    saveToStorage(newList);
+    await saveToStorage(entry);
+    const { data } = await supabase
+      .from("watchlist")
+      .select("*")
+      .eq("usuario", currentUser)
+      .order("roi_anual", { ascending: false });
+    if (data) setWatchlist(data);
     setShowSaveModal(false);
     setSaveName(""); setSaveLink(""); setSaveNotas("");
     setTab("watchlist");
   };
 
   const handleDelete = async (id) => {
-    const nl = watchlist.filter(w => w.id !== id);
-    setWatchlist(nl);
-    saveToStorage(nl);
+    await deleteFromStorage(id);
+    setWatchlist(prev => prev.filter(w => w.id !== id));
   };
 
   const tendIcon = (t) => t === "sube" ? "▲" : t === "baja" ? "▼" : "—";
