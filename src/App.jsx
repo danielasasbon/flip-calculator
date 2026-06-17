@@ -1,4 +1,10 @@
 import { useState, useMemo, useEffect } from "react";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  "https://pkqhzkrkxmipivlabpzb.supabase.co",
+  "sb_publishable_uHSKWOeaYyUo07g59N6y-A_cJMhLCUx"
+);
 
 const fmt = (n) => new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 }).format(n);
 const fmtUSD = (n) => "USD " + fmt(n);
@@ -141,14 +147,24 @@ export default function FlipCalc() {
   const [saveNotas, setSaveNotas] = useState("");
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) setWatchlist(JSON.parse(saved));
-    } catch (e) {}
-  }, []);
+    const loadWatchlist = async () => {
+      if (!currentUser) return;
+      const { data, error } = await supabase
+        .from("watchlist")
+        .select("*")
+        .eq("usuario", currentUser)
+        .order("roi_anual", { ascending: false });
+      if (!error && data) setWatchlist(data);
+    };
+    loadWatchlist();
+  }, [currentUser]);
 
-  const saveToStorage = (list) => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); } catch (e) {}
+  const saveToStorage = async (entry) => {
+    await supabase.from("watchlist").insert([entry]);
+  };
+
+  const deleteFromStorage = async (id) => {
+    await supabase.from("watchlist").delete().eq("id", id);
   };
 
   const refRates  = { estetica: 300, media: 500, integral: 850 };
@@ -728,17 +744,17 @@ export default function FlipCalc() {
 
                     {/* Tabla de datos */}
                     <div style={{ padding: "0 14px" }}>
-                      <Row label="Publicación" value={fmtUSD(w.listPrice)} />
+                      <Row label="Publicación" value={fmtUSD(w.list_price)} />
                       <Row label="ARV (reciclado)" value={fmtUSD(w.arv)} valueColor={C.green} bold />
-                      {w.nuevoTotal && <Row label="Nuevo en barrio" value={fmtUSD(w.nuevoTotal)} valueColor={C.accent} />}
-                      {w.discVsNuevo != null && (
+                      {w.nuevo_total && <Row label="Nuevo en barrio" value={fmtUSD(w.nuevo_total)} valueColor={C.accent} />}
+                      {w.disc_vs_nuevo != null && (
                         <Row label="ARV vs nuevo"
-                          value={w.discVsNuevo > 0 ? `−${w.discVsNuevo.toFixed(0)}%` : `+${Math.abs(w.discVsNuevo).toFixed(0)}%`}
-                          valueColor={w.discVsNuevo > 0 ? C.green : C.red} />
+                          value={w.disc_vs_nuevo > 0 ? `−${w.disc_vs_nuevo.toFixed(0)}%` : `+${Math.abs(w.disc_vs_nuevo).toFixed(0)}%`}
+                          valueColor={w.disc_vs_nuevo > 0 ? C.green : C.red} />
                       )}
                       <Row label="Ganancia" value={fmtUSD(w.profit)} valueColor={w.profit > 0 ? C.green : C.red} />
                       <Row label="ROI total" value={`${w.roi.toFixed(2)}%`} valueColor={w.roi > 10 ? C.green : C.red} />
-                      <Row label="ROI anualizado" value={`${w.roiAnual.toFixed(2)}%`} valueColor={w.roiAnual > 15 ? C.green : w.roiAnual > 0 ? C.amber : C.red} bold />
+                      <Row label="ROI anualizado" value={`${w.roi_anual.toFixed(2)}%`} valueColor={w.roi_anual > 15 ? C.green : w.roi_anual > 0 ? C.amber : C.red} bold />
                     </div>
 
                     {/* Footer */}
