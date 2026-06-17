@@ -791,7 +791,7 @@ export default function FlipCalc() {
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.35)", zIndex: 100, display: "flex", alignItems: "flex-end", justifyContent: "center" }}
           onClick={(e) => { if (e.target === e.currentTarget) setShowSaveModal(false); }}>
           <div style={{ background: C.panel, border: `1px solid ${C.border}`, borderRadius: "20px 20px 0 0", padding: "24px 20px 48px", width: "100%", maxWidth: 520 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: C.textMuted, letterSpacing: "0.04em", textTransform: "uppercase", fontSize: 12, marginBottom: 20 }}>Guardar en Watchlist</div>
+            <div style={{ fontSize: 17, fontWeight: 600, color: C.text, letterSpacing: "-0.02em", marginBottom: 20 }}>Guardar en Watchlist</div>
 
             {[
               { label: "NOMBRE / DESCRIPCIÓN *", val: saveName, set: setSaveName, placeholder: "Ej: 3A Thames 1200 Palermo" },
