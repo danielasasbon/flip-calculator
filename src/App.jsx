@@ -176,7 +176,7 @@ export default function FlipCalc() {
     const refCost     = refRates[refType] * m2 + refExtra;
     const closing     = buyPrice * closingPct / 100;
     const totalCost   = buyPrice + refCost + closing;
-    const arvM2       = barrio ? (customUsadoM2 ? Number(customUsadoM2) : BARRIOS[barrio].usado) : null;
+    const arvM2       = barrio ? (customUsadoM2 ? Number(customUsadoM2) : BARRIOS[barrio].reciclado) : null;
     const arv         = arvM2 ? arvM2 * m2 : null;
     const nuevoM2ref  = barrio ? (customNuevoM2 ? Number(customNuevoM2) : BARRIOS[barrio].nuevo) : null;
     const nuevoTotal  = nuevoM2ref ? nuevoM2ref * m2 : null;
@@ -441,11 +441,11 @@ export default function FlipCalc() {
               <div style={{ background: C.panelAlt, border: `1px solid ${C.border}`, borderRadius: 6, padding: "14px 16px", marginBottom: 20 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: C.textSub, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 4 }}>Precios relevados en ZonaProp</div>
                 <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 14, fontFamily: C.mono }}>
-                  REF: usado {fmt(BARRIOS[barrio].usado)} · nuevo {fmt(BARRIOS[barrio].nuevo)} USD/m²
+                  REF: a reciclar {fmt(BARRIOS[barrio].sin_ref)} · reciclado {fmt(BARRIOS[barrio].reciclado)} · nuevo {fmt(BARRIOS[barrio].nuevo)} USD/m²
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                   {[
-                    { label: "USADO / m²", val: customUsadoM2, set: setCustomUsadoM2, ref: BARRIOS[barrio].usado },
+                    { label: "RECICLADO / m²", val: customUsadoM2, set: setCustomUsadoM2, ref: BARRIOS[barrio].reciclado },
                     { label: "NUEVO / m²", val: customNuevoM2, set: setCustomNuevoM2, ref: BARRIOS[barrio].nuevo },
                   ].map(({ label, val, set, ref }) => (
                     <div key={label}>
@@ -670,9 +670,9 @@ export default function FlipCalc() {
                 <div style={{ background: C.panel, border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden", marginBottom: 20 }}>
                   <div style={{ padding: "10px 14px", borderBottom: `1px solid ${C.border}`, display: "grid", gridTemplateColumns: "1fr 1fr 1fr" }}>
                     {[
-                      { label: "USADO/m²", val: `${fmt(barrioData.usado)} USD` },
+                      { label: "A RECICLAR/m²", val: `${fmt(barrioData.sin_ref)} USD` },
+                      { label: "RECICLADO/m²", val: `${fmt(barrioData.reciclado)} USD` },
                       { label: "NUEVO/m²", val: `${fmt(barrioData.nuevo)} USD` },
-                      { label: "POZO/m²", val: `${fmt(barrioData.pozo)} USD` },
                     ].map(({ label, val }) => (
                       <div key={label} style={{ padding: "4px 8px", borderRight: `1px solid ${C.border}` }}>
                         <div style={{ fontSize: 9, color: C.textMuted, letterSpacing: "0.1em", marginBottom: 3 }}>{label}</div>
