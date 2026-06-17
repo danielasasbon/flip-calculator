@@ -10,29 +10,31 @@ const fmt = (n) => new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 }).
 const fmtUSD = (n) => "USD " + fmt(n);
 
 const BARRIOS = {
-  "Palermo":           { usado: 2800, nuevo: 4200, pozo: 3500, tendencia: "sube", demanda: "alta",  nota: "Alta rotación de reciclados. El mercado premia terminaciones premium." },
-  "Palermo Soho":      { usado: 3200, nuevo: 4800, pozo: 3900, tendencia: "sube", demanda: "alta",  nota: "Sub-barrio premium. Perfil aspiracional con fuerte demanda de alquiler y compra." },
-  "Palermo Hollywood": { usado: 3000, nuevo: 4500, pozo: 3700, tendencia: "sube", demanda: "alta",  nota: "Alta demanda con perfil creativo y gastronómico. Precios sostenidos." },
-  "Las Cañitas":       { usado: 3100, nuevo: 4600, pozo: 3800, tendencia: "sube", demanda: "alta",  nota: "Barrio boutique ABC1. Ideal para unidades pequeñas con terminaciones de lujo." },
-  "Belgrano":          { usado: 2600, nuevo: 3900, pozo: 3200, tendencia: "sube", demanda: "alta",  nota: "Amplio parque habitacional envejecido. Gran margen de reciclado." },
-  "Núñez":             { usado: 2500, nuevo: 3700, pozo: 3000, tendencia: "estable", demanda: "media", nota: "Barrio residencial con demanda estable. Precios accesibles vs. Belgrano." },
-  "Recoleta":          { usado: 3000, nuevo: 5000, pozo: 4000, tendencia: "sube", demanda: "media", nota: "Mercado premium. Flipping viable solo con refacción de lujo." },
-  "Barrio Norte":      { usado: 2700, nuevo: 4000, pozo: 3300, tendencia: "sube", demanda: "media", nota: "Gran stock de edificios 60-80s. Buenas oportunidades de revalorización." },
-  "Almagro":           { usado: 2000, nuevo: 3000, pozo: 2500, tendencia: "sube", demanda: "alta",  nota: "Uno de los mejores márgenes de CABA. Precio de entrada bajo con demanda creciente." },
-  "Villa Crespo":      { usado: 2200, nuevo: 3200, pozo: 2700, tendencia: "sube", demanda: "alta",  nota: "Fuerte transformación. Precios por debajo de Palermo con tendencia convergente." },
-  "Caballito":         { usado: 2100, nuevo: 3100, pozo: 2600, tendencia: "estable", demanda: "media", nota: "Barrio céntrico consolidado. Buena liquidez en la venta de reciclados." },
-  "Flores":            { usado: 1600, nuevo: 2400, pozo: 2000, tendencia: "estable", demanda: "media", nota: "Precios accesibles. Refacciones orientadas a precio, no a lujo." },
-  "Balvanera":         { usado: 1700, nuevo: 2500, pozo: 2100, tendencia: "estable", demanda: "baja",  nota: "Zona comercial con demanda residencial moderada." },
-  "San Telmo":         { usado: 2200, nuevo: 3300, pozo: 2700, tendencia: "sube", demanda: "media", nota: "Gentrificación en curso. Bueno para flipping orientado a turismo." },
-  "Puerto Madero":     { usado: 5000, nuevo: 7000, pozo: 6000, tendencia: "estable", demanda: "baja",  nota: "Ultralujo, mercado ilíquido. No recomendable para primeras operaciones." },
-  "Colegiales":        { usado: 2400, nuevo: 3600, pozo: 3000, tendencia: "sube", demanda: "alta",  nota: "Crecimiento fuerte. Similar a Palermo pero más accesible." },
-  "Chacarita":         { usado: 2100, nuevo: 3100, pozo: 2600, tendencia: "sube", demanda: "alta",  nota: "Mucho stock antiguo. Buenos márgenes para unidades medianas." },
-  "Villa Urquiza":     { usado: 2000, nuevo: 3000, pozo: 2500, tendencia: "estable", demanda: "media", nota: "Residencial familiar con demanda estable." },
-  "Saavedra":          { usado: 1900, nuevo: 2800, pozo: 2300, tendencia: "estable", demanda: "media", nota: "Menor dinámica que zonas céntricas. Velocidad de venta media." },
-  "Devoto":            { usado: 1800, nuevo: 2700, pozo: 2200, tendencia: "estable", demanda: "media", nota: "Precio de entrada accesible pero menor velocidad de salida." },
-  "Villa del Parque":  { usado: 1800, nuevo: 2600, pozo: 2100, tendencia: "estable", demanda: "baja",  nota: "Mercado lento. Requiere precio de compra muy bajo." },
-  "Boedo":             { usado: 1900, nuevo: 2800, pozo: 2300, tendencia: "sube", demanda: "media", nota: "Revalorización gradual. Stock antiguo con potencial de reciclado." },
-  "Paternal":          { usado: 1700, nuevo: 2500, pozo: 2000, tendencia: "estable", demanda: "baja",  nota: "Mercado lento. Solo viable con precios muy por debajo del mercado." },
+  // Precios actualizados jun-2026. Fuentes: Mudafy ene-2026, Ambito dic-2025, Zonaprop feb-2026, RE/MAX
+  // sin_ref = a reciclar (lo que comprás) | reciclado = post-refacción premium (tu ARV) | nuevo = a estrenar
+  "Palermo":           { sin_ref: 2000, reciclado: 2900, nuevo: 3800, pozo: 3200, tendencia: "sube", demanda: "alta",  nota: "Alta rotación de reciclados. El mercado premia terminaciones premium. Fuerte demanda post-crédito UVA." },
+  "Palermo Soho":      { sin_ref: 2200, reciclado: 3200, nuevo: 4200, pozo: 3500, tendencia: "sube", demanda: "alta",  nota: "Sub-barrio premium. Perfil aspiracional con fuerte demanda de alquiler y compra." },
+  "Palermo Hollywood": { sin_ref: 2100, reciclado: 3000, nuevo: 4000, pozo: 3300, tendencia: "sube", demanda: "alta",  nota: "Alta demanda con perfil creativo y gastronómico. Precios sostenidos." },
+  "Las Cañitas":       { sin_ref: 2100, reciclado: 3100, nuevo: 4100, pozo: 3400, tendencia: "sube", demanda: "alta",  nota: "Barrio boutique ABC1. Ideal para unidades pequeñas con terminaciones de lujo." },
+  "Belgrano":          { sin_ref: 1900, reciclado: 2800, nuevo: 3700, pozo: 3000, tendencia: "sube", demanda: "alta",  nota: "Amplio parque habitacional envejecido. Gran margen de reciclado. Demanda sostenida." },
+  "Núñez":             { sin_ref: 1950, reciclado: 2850, nuevo: 3800, pozo: 3100, tendencia: "sube", demanda: "alta",  nota: "Fuerte crecimiento 2024-2026 (+16,5%). Demanda residencial y nuevos proyectos de diseño." },
+  "Recoleta":          { sin_ref: 1850, reciclado: 2700, nuevo: 4000, pozo: 3300, tendencia: "sube", demanda: "media", nota: "Mercado premium. Flipping viable solo con refacción de lujo y terminaciones de alta gama." },
+  "Barrio Norte":      { sin_ref: 1800, reciclado: 2650, nuevo: 3600, pozo: 3000, tendencia: "sube", demanda: "media", nota: "Gran stock de edificios 60-80s. Buenas oportunidades de revalorización post-refacción." },
+  "Almagro":           { sin_ref: 1500, reciclado: 2300, nuevo: 2900, pozo: 2400, tendencia: "sube", demanda: "alta",  nota: "PH para reciclar: comprar a u$s1.400-1.600/m² y vender a u$s2.200-2.600/m². Muy buen margen." },
+  "Villa Crespo":      { sin_ref: 1550, reciclado: 2400, nuevo: 3000, pozo: 2500, tendencia: "sube", demanda: "alta",  nota: "Fuerte transformación (+15-20% en 2025-2026). Precios convergiendo con Palermo." },
+  "Caballito":         { sin_ref: 1450, reciclado: 2200, nuevo: 2900, pozo: 2400, tendencia: "estable", demanda: "media", nota: "Barrio céntrico consolidado. Mejor relación precio-demanda para 2 ambientes." },
+  "Flores":            { sin_ref: 1200, reciclado: 1850, nuevo: 2400, pozo: 2000, tendencia: "estable", demanda: "media", nota: "Precios accesibles. Buena relación precio-demanda para 2 ambientes." },
+  "Balvanera":         { sin_ref: 1150, reciclado: 1750, nuevo: 2300, pozo: 1900, tendencia: "estable", demanda: "baja",  nota: "Zona comercial con demanda residencial moderada. Solo viable con precios muy bajos." },
+  "San Telmo":         { sin_ref: 1300, reciclado: 2000, nuevo: 2700, pozo: 2200, tendencia: "estable", demanda: "media", nota: "Amplia dispersión de precios (u$s865-1.875). Bueno para turismo y alquiler temporario." },
+  "Puerto Madero":     { sin_ref: 4000, reciclado: 5500, nuevo: 7500, pozo: 6500, tendencia: "estable", demanda: "baja",  nota: "Ultralujo. Mercado ilíquido. No recomendable para flipping." },
+  "Colegiales":        { sin_ref: 1750, reciclado: 2550, nuevo: 3400, pozo: 2800, tendencia: "sube", demanda: "alta",  nota: "Crecimiento fuerte (+14,9% anual). Emergente consolidado, más accesible que Palermo." },
+  "Chacarita":         { sin_ref: 1600, reciclado: 2350, nuevo: 3100, pozo: 2600, tendencia: "sube", demanda: "alta",  nota: "Mucho stock antiguo. Crecimiento del 9% anual. Buenos márgenes para unidades medianas." },
+  "Villa Urquiza":     { sin_ref: 1650, reciclado: 2450, nuevo: 3200, pozo: 2600, tendencia: "sube", demanda: "media", nota: "Consolidada con subte y vida comercial. Precios en alza sostenida." },
+  "Saavedra":          { sin_ref: 1500, reciclado: 2200, nuevo: 2900, pozo: 2400, tendencia: "estable", demanda: "media", nota: "Residencial tranquilo. Demanda estable, menor dinamismo que barrios céntricos." },
+  "Devoto":            { sin_ref: 1400, reciclado: 2050, nuevo: 2700, pozo: 2200, tendencia: "estable", demanda: "media", nota: "Precio de entrada accesible pero velocidad de venta media-baja." },
+  "Villa del Parque":  { sin_ref: 1300, reciclado: 1950, nuevo: 2600, pozo: 2100, tendencia: "estable", demanda: "baja",  nota: "Mercado tranquilo. Requiere precio de compra bajo para que el margen cierre." },
+  "Boedo":             { sin_ref: 1400, reciclado: 2050, nuevo: 2700, pozo: 2200, tendencia: "sube", demanda: "media", nota: "Revalorización gradual. Stock antiguo con buen potencial de reciclado." },
+  "Paternal":          { sin_ref: 1250, reciclado: 1850, nuevo: 2500, pozo: 2000, tendencia: "estable", demanda: "baja",  nota: "Mercado lento. Solo viable con precios muy por debajo del mercado." },
 };
 
 const STORAGE_KEY = "flip-watchlist-v1";
@@ -440,8 +442,13 @@ export default function FlipCalc() {
             {barrio && (
               <div style={{ background: C.panelAlt, border: `1px solid ${C.border}`, borderRadius: 6, padding: "14px 16px", marginBottom: 20 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: C.textSub, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 4 }}>Precios relevados en ZonaProp</div>
-                <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 14, fontFamily: C.mono }}>
+                <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 10, fontFamily: C.mono }}>
                   REF: a reciclar {fmt(BARRIOS[barrio].sin_ref)} · reciclado {fmt(BARRIOS[barrio].reciclado)} · nuevo {fmt(BARRIOS[barrio].nuevo)} USD/m²
+                </div>
+                <div style={{ fontSize: 11, color: C.textMuted, lineHeight: 1.5, marginBottom: 14, paddingBottom: 12, borderBottom: `1px solid ${C.border}` }}>
+                  <span style={{ color: C.text, fontWeight: 600 }}>A reciclar:</span> lo que pagás al comprar (sin renovar) ·{" "}
+                  <span style={{ color: C.accent, fontWeight: 600 }}>Reciclado:</span> tu ARV, lo que vendés post-refacción ·{" "}
+                  <span style={{ color: C.text, fontWeight: 600 }}>Nuevo:</span> a estrenar, tu competencia más cara
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                   {[
