@@ -113,7 +113,7 @@ const Slider = ({ label, min, max, step, value, onChange, prefix = "", suffix = 
 
 const SectionHeader = ({ title, sub, mt = 28 }) => (
   <div style={{ marginTop: mt, marginBottom: 16, paddingBottom: 10, borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-    <span style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, letterSpacing: "0.04em", textTransform: "uppercase", fontSize: 12 }}>{title}</span>
+    <span style={{ fontSize: 12, fontWeight: 700, color: C.textMuted, letterSpacing: "0.04em", textTransform: "uppercase" }}>{title}</span>
     {sub && <span style={{ fontSize: 10, color: C.textMuted }}>{sub}</span>}
   </div>
 );
@@ -125,13 +125,24 @@ export default function FlipCalc() {
   const [loginError, setLoginError] = useState("");
   const [currentUser, setCurrentUser] = useState(() => sessionStorage.getItem("flippar_user") || "");
   const [tab, setTab] = useState("calc");
+  const [modo, setModo] = useState("simple");
   const [listPrice, setListPrice] = useState(120000);
   const [m2, setM2] = useState(55);
   const [negPct, setNegPct] = useState(10);
   const [refType, setRefType] = useState("media");
   const [refExtra, setRefExtra] = useState(0);
   const [closingPct, setClosingPct] = useState(5);
+  const [comisionCompraPct, setComisionCompraPct] = useState(0);
+  const [escribanoCompraPct, setEscribanoCompraPct] = useState(1);
+  const [valorMuebles, setValorMuebles] = useState(0);
+  const [precioVentaPublicado, setPrecioVentaPublicado] = useState("");
+  const [precioVentaCierre, setPrecioVentaCierre] = useState("");
+  // Airbnb / alquiler temporario
+  const [airbnbPrecioNoche, setAirbnbPrecioNoche] = useState(0);
+  const [airbnbDiasMes, setAirbnbDiasMes] = useState(0);
+  const [airbnbGastosMensuales, setAirbnbGastosMensuales] = useState(0);
   const [sellCommPct, setSellCommPct] = useState(3);
+  const [escribanoPct, setEscribanoPct] = useState(1);
   const [sellMonths, setSellMonths] = useState(8);
   const [expensas, setExpensas] = useState(150000);
   const [expensasMoneda, setExpensasMoneda] = useState("ARS");
@@ -177,23 +188,39 @@ export default function FlipCalc() {
     const buyPrice    = listPrice * (1 - negPct / 100);
     const refCost     = refRates[refType] * m2 + refExtra;
     const closing     = buyPrice * closingPct / 100;
-    const totalCost   = buyPrice + refCost + closing;
+    const comisionCompra = buyPrice * comisionCompraPct / 100;
+    const escribanoCompra = buyPrice * escribanoCompraPct / 100;
+    const totalCost   = buyPrice + refCost + closing + comisionCompra + escribanoCompra;
     const arvM2       = barrio ? (customUsadoM2 ? Number(customUsadoM2) : BARRIOS[barrio].reciclado) : null;
     const arv         = arvM2 ? arvM2 * m2 : null;
+    const pctDelARV   = arv ? (buyPrice / arv) * 100 : null;
     const nuevoM2ref  = barrio ? (customNuevoM2 ? Number(customNuevoM2) : BARRIOS[barrio].nuevo) : null;
     const nuevoTotal  = nuevoM2ref ? nuevoM2ref * m2 : null;
     const usandoCustom = !!(customUsadoM2 || customNuevoM2);
     const sellComm    = arv ? arv * sellCommPct / 100 : null;
-    const netSale     = arv ? arv - sellComm : null;
+    const escribanoCost = arv ? arv * escribanoPct / 100 : null;
+    const netSale     = arv ? arv - sellComm - escribanoCost : null;
     const profit      = arv ? netSale - totalCost : null;
     const roi         = profit ? (profit / totalCost) * 100 : null;
     const roiAnual    = roi ? (roi / sellMonths) * 12 : null;
     const viable      = profit > 0 && roi > 10;
     const discVsNuevo = arv && nuevoTotal ? ((nuevoTotal - arv) / nuevoTotal) * 100 : null;
+    // Venta: usar precio de cierre manual si está completo, sino el ARV calculado
+    const ventaFinal = precioVentaCierre ? Number(precioVentaCierre) : arv;
+    const sellCommFinal = ventaFinal ? ventaFinal * sellCommPct / 100 : null;
+    const escribanoCostFinal = ventaFinal ? ventaFinal * escribanoPct / 100 : null;
+    const netSaleFinal = ventaFinal ? ventaFinal - sellCommFinal - escribanoCostFinal : null;
+    const profitFinal = ventaFinal ? netSaleFinal - totalCost : null;
+    const gananciaConMuebles = profitFinal !== null ? profitFinal + Number(valorMuebles || 0) : null;
+    // Airbnb / alquiler temporario
+    const airbnbIngresoMensual = airbnbPrecioNoche * airbnbDiasMes;
+    const airbnbIngresoAnualBruto = airbnbIngresoMensual * 12;
+    const airbnbGastosAnuales = airbnbGastosMensuales * 12;
+    const airbnbIngresoAnualNeto = airbnbIngresoAnualBruto - airbnbGastosAnuales;
     // Expensas durante tenencia
     const expensasUSD = expensasMoneda === "ARS" ? expensas / blueRate : expensas;
     const expensasTotal = expensasUSD * sellMonths;
-    const profitNeto = profit !== null ? profit - expensasTotal : null;
+    const profitNeto = profitFinal !== null ? profitFinal - expensasTotal : null;
     const roiNeto = profitNeto !== null ? (profitNeto / totalCost) * 100 : null;
     const roiNetoAnual = roiNeto !== null ? (roiNeto / sellMonths) * 12 : null;
     const viableNeto = profitNeto > 0 && roiNeto > 10;
@@ -201,8 +228,8 @@ export default function FlipCalc() {
     const alquilerMensual = alquilerM2 > 0 ? alquilerM2 * m2 : null;
     const alquilerAnual = alquilerMensual ? alquilerMensual * 12 : null;
     const alquilerROI = alquilerAnual ? (alquilerAnual / totalCost) * 100 : null;
-    return { buyPrice, refCost, closing, totalCost, arv, arvM2, nuevoTotal, sellComm, netSale, profit, roi, roiAnual, viable, discVsNuevo, usandoCustom, expensasTotal, profitNeto, roiNeto, roiNetoAnual, viableNeto, alquilerMensual, alquilerAnual, alquilerROI };
-  }, [listPrice, m2, negPct, refType, refExtra, closingPct, sellCommPct, sellMonths, barrio, customUsadoM2, customNuevoM2, expensas, expensasMoneda, blueRate, alquilerM2]);
+    return { buyPrice, refCost, closing, comisionCompra, escribanoCompra, totalCost, arv, arvM2, pctDelARV, nuevoTotal, sellComm, escribanoCost, netSale, profit, roi, roiAnual, viable, discVsNuevo, usandoCustom, expensasTotal, profitNeto, roiNeto, roiNetoAnual, viableNeto, alquilerMensual, alquilerAnual, alquilerROI, ventaFinal, sellCommFinal, escribanoCostFinal, netSaleFinal, profitFinal, gananciaConMuebles, airbnbIngresoMensual, airbnbIngresoAnualBruto, airbnbGastosAnuales, airbnbIngresoAnualNeto };
+  }, [listPrice, m2, negPct, refType, refExtra, closingPct, comisionCompraPct, escribanoCompraPct, sellCommPct, escribanoPct, sellMonths, barrio, customUsadoM2, customNuevoM2, expensas, expensasMoneda, blueRate, alquilerM2, precioVentaCierre, valorMuebles, airbnbPrecioNoche, airbnbDiasMes, airbnbGastosMensuales]);
 
   const filtered = Object.keys(BARRIOS).filter(b =>
     barrioInput.length > 0 && b.toLowerCase().includes(barrioInput.toLowerCase())
@@ -379,6 +406,18 @@ export default function FlipCalc() {
         {/* ===== CALC ===== */}
         {tab === "calc" && (
           <>
+            <div style={{ display: "flex", gap: 8, marginTop: 20, marginBottom: 4 }}>
+              {[["simple", "Simple"], ["avanzado", "Avanzado"]].map(([key, label]) => (
+                <button key={key} onClick={() => setModo(key)} style={{
+                  flex: 1, padding: "9px 0", fontSize: 13, fontWeight: 600,
+                  background: modo === key ? C.accent : C.panelAlt,
+                  border: `1px solid ${modo === key ? C.accent : C.border}`,
+                  borderRadius: 10, cursor: "pointer",
+                  color: modo === key ? "#fff" : C.textSub,
+                  fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif", transition: "all 0.15s",
+                }}>{label}</button>
+              ))}
+            </div>
             <SectionHeader title="Parámetros de entrada" sub="CABA · USD" mt={24} />
 
             <div style={{ marginBottom: 24 }}>
@@ -406,8 +445,15 @@ export default function FlipCalc() {
               <span style={{ fontSize: 22, fontWeight: 700, color: C.text, fontFamily: C.mono }}>{fmtUSD(Math.round(c.buyPrice))}</span>
             </div>
             {m2 > 0 && (
-              <div style={{ fontSize: 12, color: C.textMuted, textAlign: "right", marginBottom: 24, fontFamily: C.mono }}>
+              <div style={{ fontSize: 12, color: C.textMuted, textAlign: "right", marginBottom: 4, fontFamily: C.mono }}>
                 = {fmtUSD(Math.round(c.buyPrice / m2))}/m² al comprar
+              </div>
+            )}
+            {c.pctDelARV != null && (
+              <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 24 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, fontFamily: C.mono, color: c.pctDelARV <= 70 ? C.green : c.pctDelARV <= 85 ? C.amber : C.red, background: c.pctDelARV <= 70 ? C.greenDim : c.pctDelARV <= 85 ? C.amberDim : C.redDim, padding: "3px 10px", borderRadius: 6 }}>
+                  {c.pctDelARV.toFixed(0)}% del ARV
+                </span>
               </div>
             )}
 
@@ -514,8 +560,19 @@ export default function FlipCalc() {
 
             <Slider label="Refacción adicional" min={0} max={30000} step={500} value={refExtra} onChange={setRefExtra} prefix="USD " />
             <Slider label="Gastos de compra" min={2} max={10} step={0.5} value={closingPct} onChange={setClosingPct} suffix="%" />
+            {modo === "avanzado" && (
+              <>
+                <Slider label="Comisión inmobiliaria (compra)" min={0} max={6} step={0.5} value={comisionCompraPct} onChange={setComisionCompraPct} suffix="%" />
+                <Slider label="Escribano (compra)" min={0} max={3} step={0.25} value={escribanoCompraPct} onChange={setEscribanoCompraPct} suffix="%" />
+              </>
+            )}
             <Slider label="Comisión de venta" min={1} max={6} step={0.5} value={sellCommPct} onChange={setSellCommPct} suffix="%" />
+            {modo === "avanzado" && (
+              <Slider label="Escribano (venta)" min={0} max={3} step={0.25} value={escribanoPct} onChange={setEscribanoPct} suffix="%" />
+            )}
             <Slider label="Plazo hasta venta" min={3} max={24} step={1} value={sellMonths} onChange={setSellMonths} suffix=" meses" />
+            {modo === "avanzado" && (
+              <>
             {/* Expensas */}
             <div style={{ marginBottom: 24 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: C.textSub, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 10 }}>Expensas mensuales</div>
@@ -577,6 +634,8 @@ export default function FlipCalc() {
                 {alquilerM2 > 0 ? `→ USD ${fmt(alquilerM2 * m2)}/mes · USD ${fmt(alquilerM2 * m2 * 12)}/año` : "Dejá en 0 para omitir comparativa de alquiler"}
               </div>
             </div>
+              </>
+            )}
 
             {/* ── RESULTADOS ── */}
             {!barrio ? (
@@ -592,6 +651,8 @@ export default function FlipCalc() {
                   <Row label="Precio de compra" value={fmtUSD(Math.round(c.buyPrice))} bold valueColor={C.text} />
                   <Row label="Refacción" value={fmtUSD(c.refCost)} sub={`${fmt(Math.round(c.refCost/m2))} USD/m²`} />
                   <Row label="Gastos de compra" value={fmtUSD(Math.round(c.closing))} />
+                  <Row label="Comisión inmobiliaria (compra)" value={fmtUSD(Math.round(c.comisionCompra))} />
+                  <Row label="Escribano (compra)" value={fmtUSD(Math.round(c.escribanoCompra))} />
                   <Row label={`Expensas (${sellMonths} meses)`} value={fmtUSD(Math.round(c.expensasTotal))} valueColor={c.expensasTotal > 0 ? C.red : C.textMuted} sub={expensasMoneda === "ARS" ? `$ ${fmt(expensas)}/mes · blue $${fmt(blueRate)}` : undefined} />
                   <Row label="TOTAL INVERTIDO" value={fmtUSD(Math.round(c.totalCost))} bold valueColor={C.amber} />
                 </div>
@@ -632,14 +693,49 @@ export default function FlipCalc() {
                   </div>
                 </div>
 
+                <SectionHeader title="Venta futura" mt={20} />
+                {modo === "avanzado" && (
+                  <>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
+                  <div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 6 }}>Publicado / aspiracional</div>
+                    <input type="number" value={precioVentaPublicado} onChange={e => setPrecioVentaPublicado(e.target.value)} placeholder={String(Math.round(c.arv || 0))}
+                      style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: C.panelAlt, border: `1px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 15, fontWeight: 600, fontFamily: C.mono, outline: "none" }} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: C.green, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 6 }}>Cierre estimado</div>
+                    <input type="number" value={precioVentaCierre} onChange={e => setPrecioVentaCierre(e.target.value)} placeholder={String(Math.round(c.arv || 0))}
+                      style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: C.greenDim, border: `1px solid ${C.green}`, borderRadius: 10, color: C.text, fontSize: 15, fontWeight: 600, fontFamily: C.mono, outline: "none" }} />
+                  </div>
+                </div>
+                <div style={{ fontSize: 11, color: C.textMuted, marginBottom: 16 }}>
+                  Si dejás "Cierre estimado" vacío, se usa el ARV calculado ({fmtUSD(Math.round(c.arv || 0))}).
+                </div>
+                  </>
+                )}
+
+                <div style={{ background: C.panelAlt, border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden", marginBottom: 16 }}>
+                  <Row label="Comisión de venta" value={fmtUSD(Math.round(c.sellCommFinal))} valueColor={C.red} />
+                  <Row label="Escribano (venta)" value={fmtUSD(Math.round(c.escribanoCostFinal))} valueColor={C.red} />
+                  <Row label="Venta neta" value={fmtUSD(Math.round(c.netSaleFinal))} bold />
+                </div>
+
+                {modo === "avanzado" && (
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 6 }}>Valor muebles incluidos (extra)</div>
+                  <input type="number" value={valorMuebles} onChange={e => setValorMuebles(e.target.value)}
+                    style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: C.panelAlt, border: `1px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 15, fontWeight: 600, fontFamily: C.mono, outline: "none" }} />
+                </div>
+                )}
+
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
-                  <StatBox label="Ganancia bruta" value={fmtUSD(Math.round(c.profit))}
-                    color={c.profit > 0 ? C.green : C.red}
+                  <StatBox label="Ganancia bruta" value={fmtUSD(Math.round(c.profitFinal))}
+                    color={c.profitFinal > 0 ? C.green : C.red}
                     sub="sin descontar expensas" />
-                  <StatBox label="Ganancia neta" value={fmtUSD(Math.round(c.profitNeto))}
-                    color={c.profitNeto > 0 ? C.green : C.red}
-                    tag={c.profitNeto > 0 ? { label: "LONG", color: C.green, bg: C.greenDim, border: C.greenDim } : { label: "NEG", color: C.red, bg: C.redDim, border: C.redDim }}
-                    sub="descontando expensas" />
+                  <StatBox label="Ganancia + muebles" value={fmtUSD(Math.round(c.gananciaConMuebles))}
+                    color={c.gananciaConMuebles > 0 ? C.green : C.red}
+                    tag={c.gananciaConMuebles > 0 ? { label: "LONG", color: C.green, bg: C.greenDim, border: C.greenDim } : { label: "NEG", color: C.red, bg: C.redDim, border: C.redDim }}
+                    sub="venta con muebles incluidos" />
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
                   <StatBox label="ROI neto total" value={`${c.roiNeto?.toFixed(2)}%`}
@@ -657,7 +753,7 @@ export default function FlipCalc() {
                   </div>
                   <div style={{ fontSize: 14, color: c.viableNeto ? "#065F46" : "#991B1B", lineHeight: 1.7 }}>
                     {c.viableNeto
-                      ? `Compra: ${fmtUSD(Math.round(c.buyPrice))} → Venta: ${fmtUSD(c.arv)} → Ganancia neta: ${fmtUSD(Math.round(c.profitNeto))} (${c.roiNeto?.toFixed(1)}% en ${sellMonths} meses)`
+                      ? `Compra: ${fmtUSD(Math.round(c.buyPrice))} → Venta: ${fmtUSD(Math.round(c.ventaFinal))} → Ganancia neta: ${fmtUSD(Math.round(c.profitNeto))} (${c.roiNeto?.toFixed(1)}% en ${sellMonths} meses)`
                       : `Con estos números el flip no cierra. Total invertido ${fmtUSD(Math.round(c.totalCost))} + expensas ${fmtUSD(c.expensasTotal)} deja margen insuficiente.`
                     }
                   </div>
@@ -685,6 +781,62 @@ export default function FlipCalc() {
                       </div>
                     </div>
                   </>
+                )}
+
+                {/* Airbnb / Alquiler temporario */}
+                {modo === "avanzado" && (
+                <>
+                <SectionHeader title="Renta Airbnb / Temporario" mt={28} />
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
+                  <div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 6 }}>Precio por noche USD</div>
+                    <input type="number" value={airbnbPrecioNoche} onChange={e => setAirbnbPrecioNoche(Number(e.target.value) || 0)}
+                      style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: C.panelAlt, border: `1px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 15, fontWeight: 600, fontFamily: C.mono, outline: "none" }} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 6 }}>Días alquilados / mes</div>
+                    <input type="number" value={airbnbDiasMes} onChange={e => setAirbnbDiasMes(Number(e.target.value) || 0)}
+                      style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: C.panelAlt, border: `1px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 15, fontWeight: 600, fontFamily: C.mono, outline: "none" }} />
+                  </div>
+                </div>
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 6 }}>Gastos operativos mensuales (limpieza, expensas, plataforma, etc.)</div>
+                  <input type="number" value={airbnbGastosMensuales} onChange={e => setAirbnbGastosMensuales(Number(e.target.value) || 0)}
+                    style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: C.panelAlt, border: `1px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 15, fontWeight: 600, fontFamily: C.mono, outline: "none" }} />
+                </div>
+
+                {airbnbPrecioNoche > 0 && airbnbDiasMes > 0 && (
+                  <>
+                    <div style={{ background: C.panel, border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden", marginBottom: 16 }}>
+                      <Row label="Ingreso mensual bruto" value={fmtUSD(c.airbnbIngresoMensual)} valueColor={C.accent} />
+                      <Row label="Ingreso anual bruto" value={fmtUSD(c.airbnbIngresoAnualBruto)} valueColor={C.accent} />
+                      <Row label="Gastos operativos anuales" value={fmtUSD(c.airbnbGastosAnuales)} valueColor={C.red} />
+                      <Row label="Ingreso anual neto" value={fmtUSD(c.airbnbIngresoAnualNeto)} bold valueColor={C.green} />
+                    </div>
+
+                    {/* Comparación final */}
+                    <SectionHeader title="Comparación final" mt={24} />
+                    <div style={{ background: C.panel, border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden", marginBottom: 16 }}>
+                      <Row label="Opción 1 · Airbnb 1 año" value={fmtUSD(Math.round(c.airbnbIngresoAnualNeto))} valueColor={C.accent} bold />
+                      <Row label="Opción 2 · Vender con inmobiliaria" value={fmtUSD(Math.round(c.profitFinal))} valueColor={C.green} bold />
+                      {valorMuebles > 0 && (
+                        <Row label="Opción 2b · Vender + muebles" value={fmtUSD(Math.round(c.gananciaConMuebles))} valueColor={C.green} bold />
+                      )}
+                    </div>
+                    <div style={{ background: c.profitFinal > c.airbnbIngresoAnualNeto ? C.greenDim : C.accentDim, border: `1px solid ${c.profitFinal > c.airbnbIngresoAnualNeto ? C.green : C.accent}`, borderRadius: 12, padding: "12px 16px", marginBottom: 16 }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: c.profitFinal > c.airbnbIngresoAnualNeto ? C.green : C.accent, letterSpacing: "0.1em", fontFamily: C.mono, marginBottom: 6 }}>
+                        {c.profitFinal > c.airbnbIngresoAnualNeto ? "▲ CONVIENE MÁS VENDER" : "▲ CONVIENE MÁS AIRBNB"}
+                      </div>
+                      <div style={{ fontSize: 13, color: C.text, lineHeight: 1.6 }}>
+                        {c.profitFinal > c.airbnbIngresoAnualNeto
+                          ? `Vender genera ${fmtUSD(Math.round(c.profitFinal))} de una vez vs. ${fmtUSD(Math.round(c.airbnbIngresoAnualNeto))} anuales con Airbnb. Mejor liberar el capital.`
+                          : `Airbnb genera ${fmtUSD(Math.round(c.airbnbIngresoAnualNeto))} por año vs. ${fmtUSD(Math.round(c.profitFinal))} de ganancia única al vender. Considerá mantenerla en renta.`
+                        }
+                      </div>
+                    </div>
+                  </>
+                )}
+                </>
                 )}
 
                 <SectionHeader title="Comparativa de mercado" mt={28} />
