@@ -648,18 +648,18 @@ export default function FlipCalc() {
                       <span style={{ fontSize: 10, fontWeight: 700, color: C.green, letterSpacing: "0.08em", textTransform: "uppercase" }}>m² después (venta)</span>
                       <span style={{ fontSize: 9, color: C.green, opacity: 0.7 }}>✎ editable</span>
                     </div>
-                    <div style={{ position: "relative" }}>
-                      <input
-                        type="number"
-                        value={customUsadoM2}
-                        onChange={e => setCustomUsadoM2(e.target.value)}
-                        placeholder={String(c.arvM2)}
-                        style={{ width: "100%", boxSizing: "border-box", padding: "2px 0", background: "transparent", border: "none", borderBottom: `1px dashed ${C.green}`, color: C.text, fontSize: 18, fontWeight: 700, fontFamily: C.mono, outline: "none", cursor: "text" }}
-                      />
-                      {customUsadoM2 && (
-                        <button onClick={() => setCustomUsadoM2("")} style={{ position: "absolute", right: 0, top: "50%", transform: "translateY(-50%)", background: "transparent", border: "none", color: C.textMuted, cursor: "pointer", fontSize: 12 }}>✕</button>
-                      )}
-                    </div>
+                    <input
+                      type="number"
+                      value={customUsadoM2}
+                      onChange={e => setCustomUsadoM2(e.target.value)}
+                      placeholder={String(c.arvM2)}
+                      style={{ width: "100%", boxSizing: "border-box", padding: "6px 8px", background: C.panel, border: `1px solid ${C.green}`, borderRadius: 6, color: C.text, fontSize: 18, fontWeight: 700, fontFamily: C.mono, outline: "none" }}
+                    />
+                    {customUsadoM2 && (
+                      <div style={{ textAlign: "right", marginTop: 2 }}>
+                        <button onClick={() => setCustomUsadoM2("")} style={{ background: "transparent", border: "none", color: C.textMuted, cursor: "pointer", fontSize: 11 }}>✕ limpiar</button>
+                      </div>
+                    )}
                   </div>
                 </div>
 
