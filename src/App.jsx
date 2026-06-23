@@ -125,13 +125,13 @@ export default function FlipCalc() {
   const [loginError, setLoginError] = useState("");
   const [currentUser, setCurrentUser] = useState(() => sessionStorage.getItem("flippar_user") || "");
   const [tab, setTab] = useState("calc");
-  const [modo, setModo] = useState("simple");
+  const modo = "avanzado";
   const [listPrice, setListPrice] = useState(120000);
   const [m2, setM2] = useState(55);
   const [negPct, setNegPct] = useState(10);
   const [refType, setRefType] = useState("media");
   const [refExtra, setRefExtra] = useState(0);
-  const [closingPct, setClosingPct] = useState(5);
+  const [closingPct] = useState(0);
   const [comisionCompraPct, setComisionCompraPct] = useState(0);
   const [escribanoCompraPct, setEscribanoCompraPct] = useState(1);
   const [valorMuebles, setValorMuebles] = useState(0);
@@ -406,18 +406,6 @@ export default function FlipCalc() {
         {/* ===== CALC ===== */}
         {tab === "calc" && (
           <>
-            <div style={{ display: "flex", gap: 8, marginTop: 20, marginBottom: 4 }}>
-              {[["simple", "Simple"], ["avanzado", "Avanzado"]].map(([key, label]) => (
-                <button key={key} onClick={() => setModo(key)} style={{
-                  flex: 1, padding: "9px 0", fontSize: 13, fontWeight: 600,
-                  background: modo === key ? C.accent : C.panelAlt,
-                  border: `1px solid ${modo === key ? C.accent : C.border}`,
-                  borderRadius: 10, cursor: "pointer",
-                  color: modo === key ? "#fff" : C.textSub,
-                  fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif", transition: "all 0.15s",
-                }}>{label}</button>
-              ))}
-            </div>
             <SectionHeader title="Parámetros de entrada" sub="CABA · USD" mt={24} />
 
             <div style={{ marginBottom: 24 }}>
@@ -558,8 +546,6 @@ export default function FlipCalc() {
               </div>
             </div>
 
-            <Slider label="Refacción adicional" min={0} max={30000} step={500} value={refExtra} onChange={setRefExtra} prefix="USD " />
-            <Slider label="Gastos de compra" min={2} max={10} step={0.5} value={closingPct} onChange={setClosingPct} suffix="%" />
             {modo === "avanzado" && (
               <>
                 <Slider label="Comisión inmobiliaria (compra)" min={0} max={6} step={0.5} value={comisionCompraPct} onChange={setComisionCompraPct} suffix="%" />
@@ -616,24 +602,6 @@ export default function FlipCalc() {
                 }
               </div>
             </div>
-            <div style={{ marginBottom: 24 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: C.textSub, letterSpacing: "0.1em", textTransform: "uppercase" }}>Alquiler estimado / m²</span>
-                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                  <input
-                    type="number"
-                    value={alquilerM2}
-                    onChange={e => setAlquilerM2(Number(e.target.value) || 0)}
-                    placeholder="0"
-                    style={{ width: 80, padding: "4px 8px", background: alquilerM2 > 0 ? C.accentDim : C.panelAlt, border: `1px solid ${alquilerM2 > 0 ? C.accent : C.border}`, borderRadius: 10, color: C.text, fontSize: 17, fontWeight: 600, fontFamily: C.mono, outline: "none", textAlign: "right" }}
-                  />
-                  <span style={{ fontSize: 14, fontWeight: 700, color: C.textSub, fontFamily: C.mono }}>USD/m²</span>
-                </div>
-              </div>
-              <div style={{ fontSize: 11, color: C.textMuted, fontFamily: C.mono }}>
-                {alquilerM2 > 0 ? `→ USD ${fmt(alquilerM2 * m2)}/mes · USD ${fmt(alquilerM2 * m2 * 12)}/año` : "Dejá en 0 para omitir comparativa de alquiler"}
-              </div>
-            </div>
               </>
             )}
 
@@ -650,7 +618,6 @@ export default function FlipCalc() {
                   <Row label={`Descuento (−${negPct}%)`} value={`− ${fmtUSD(Math.round(listPrice * negPct / 100))}`} valueColor={C.green} />
                   <Row label="Precio de compra" value={fmtUSD(Math.round(c.buyPrice))} bold valueColor={C.text} />
                   <Row label="Refacción" value={fmtUSD(c.refCost)} sub={`${fmt(Math.round(c.refCost/m2))} USD/m²`} />
-                  <Row label="Gastos de compra" value={fmtUSD(Math.round(c.closing))} />
                   <Row label="Comisión inmobiliaria (compra)" value={fmtUSD(Math.round(c.comisionCompra))} />
                   <Row label="Escribano (compra)" value={fmtUSD(Math.round(c.escribanoCompra))} />
                   <Row label={`Expensas (${sellMonths} meses)`} value={fmtUSD(Math.round(c.expensasTotal))} valueColor={c.expensasTotal > 0 ? C.red : C.textMuted} sub={expensasMoneda === "ARS" ? `$ ${fmt(expensas)}/mes · blue $${fmt(blueRate)}` : undefined} />
@@ -677,14 +644,17 @@ export default function FlipCalc() {
                     <div style={{ fontSize: 18, fontWeight: 700, color: C.text, fontFamily: C.mono }}>{fmtUSD(Math.round(c.buyPrice / m2))}</div>
                   </div>
                   <div style={{ background: C.greenDim, border: `1px solid ${C.green}`, borderRadius: 10, padding: "12px 14px" }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: C.green, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>m² después (venta)</div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: C.green, letterSpacing: "0.08em", textTransform: "uppercase" }}>m² después (venta)</span>
+                      <span style={{ fontSize: 9, color: C.green, opacity: 0.7 }}>✎ editable</span>
+                    </div>
                     <div style={{ position: "relative" }}>
                       <input
                         type="number"
                         value={customUsadoM2}
                         onChange={e => setCustomUsadoM2(e.target.value)}
                         placeholder={String(c.arvM2)}
-                        style={{ width: "100%", boxSizing: "border-box", padding: "0", background: "transparent", border: "none", color: C.text, fontSize: 18, fontWeight: 700, fontFamily: C.mono, outline: "none" }}
+                        style={{ width: "100%", boxSizing: "border-box", padding: "2px 0", background: "transparent", border: "none", borderBottom: `1px dashed ${C.green}`, color: C.text, fontSize: 18, fontWeight: 700, fontFamily: C.mono, outline: "none", cursor: "text" }}
                       />
                       {customUsadoM2 && (
                         <button onClick={() => setCustomUsadoM2("")} style={{ position: "absolute", right: 0, top: "50%", transform: "translateY(-50%)", background: "transparent", border: "none", color: C.textMuted, cursor: "pointer", fontSize: 12 }}>✕</button>
@@ -941,19 +911,13 @@ export default function FlipCalc() {
                       </div>
                     </div>
 
-                    {/* Tabla de datos */}
+                    {/* Resumen rápido */}
                     <div style={{ padding: "0 14px" }}>
-                      <Row label="Publicación" value={fmtUSD(w.list_price)} />
-                      <Row label="ARV (reciclado)" value={fmtUSD(w.arv)} valueColor={C.green} bold />
-                      {w.nuevo_total && <Row label="Nuevo en barrio" value={fmtUSD(w.nuevo_total)} valueColor={C.accent} />}
-                      {w.disc_vs_nuevo != null && (
-                        <Row label="ARV vs nuevo"
-                          value={w.disc_vs_nuevo != null ? (w.disc_vs_nuevo > 0 ? `−${w.disc_vs_nuevo.toFixed(0)}%` : `+${Math.abs(w.disc_vs_nuevo).toFixed(0)}%`) : "—"}
-                          valueColor={w.disc_vs_nuevo > 0 ? C.green : C.red} />
-                      )}
-                      <Row label="Ganancia" value={fmtUSD(w.profit)} valueColor={w.profit > 0 ? C.green : C.red} />
-                      <Row label="ROI total" value={w.roi != null ? `${w.roi.toFixed(2)}%` : "—"} valueColor={w.roi > 10 ? C.green : C.red} />
-                      <Row label="ROI anualizado" value={w.roi_anual != null ? `${w.roi_anual.toFixed(2)}%` : "—"} valueColor={w.roi_anual > 15 ? C.green : w.roi_anual > 0 ? C.amber : C.red} bold />
+                      <Row label="Precio de compra" value={fmtUSD(w.datos?.buyPrice)} bold />
+                      <Row label="Superficie" value={`${w.m2} m²`} />
+                      <Row label="Valor m² (compra)" value={w.datos?.buyPrice && w.m2 ? fmtUSD(Math.round(w.datos.buyPrice / w.m2)) : "—"} />
+                      <Row label="Ganancia" value={fmtUSD(w.profit)} valueColor={w.profit > 0 ? C.green : C.red} bold />
+                      <Row label="ROI total" value={w.roi != null ? `${w.roi.toFixed(2)}%` : "—"} valueColor={w.roi > 10 ? C.green : C.red} bold />
                     </div>
 
                     {/* Footer */}
