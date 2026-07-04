@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
+import * as XLSX from "xlsx";
 
 const supabase = createClient(
   "https://pkqhzkrkxmipivlabpzb.supabase.co",
@@ -125,6 +126,16 @@ export default function FlipCalc() {
   const [loginError, setLoginError] = useState("");
   const [currentUser, setCurrentUser] = useState(() => sessionStorage.getItem("flippar_user") || "");
   const [tab, setTab] = useState("calc");
+  // MAO tab state
+  const [maoArv, setMaoArv] = useState("");
+  const [maoM2, setMaoM2] = useState("");
+  const [maoCostoPorM2, setMaoCostoPorM2] = useState(500);
+  const [maoGastosCompra, setMaoGastosCompra] = useState(6);
+  const [maoGastosTenenciaMes, setMaoGastosTenenciaMes] = useState(200);
+  const [maoDuracion, setMaoDuracion] = useState(8);
+  const [maoCostosVenta, setMaoCostosVenta] = useState(5);
+  const [maoRentabilidadAnual, setMaoRentabilidadAnual] = useState(40);
+  const [maoModo, setMaoModo] = useState("mao"); // "mao" o "arv"
   const modo = "avanzado";
   const [listPrice, setListPrice] = useState(120000);
   const [m2, setM2] = useState(55);
@@ -223,12 +234,13 @@ export default function FlipCalc() {
     const profitNeto = profitFinal !== null ? profitFinal - expensasTotal : null;
     const roiNeto = profitNeto !== null ? (profitNeto / totalCost) * 100 : null;
     const roiNetoAnual = roiNeto !== null ? (roiNeto / sellMonths) * 12 : null;
-    const viableNeto = profitNeto > 0 && roiNeto > 10;
+    const roiMinimoExigido = (sellMonths / 6) * 10;
+    const viableNeto = profitNeto > 0 && roiNeto > roiMinimoExigido;
     // Alquiler
     const alquilerMensual = alquilerM2 > 0 ? alquilerM2 * m2 : null;
     const alquilerAnual = alquilerMensual ? alquilerMensual * 12 : null;
     const alquilerROI = alquilerAnual ? (alquilerAnual / totalCost) * 100 : null;
-    return { buyPrice, refCost, closing, comisionCompra, escribanoCompra, totalCost, arv, arvM2, pctDelARV, nuevoTotal, sellComm, escribanoCost, netSale, profit, roi, roiAnual, viable, discVsNuevo, usandoCustom, expensasTotal, profitNeto, roiNeto, roiNetoAnual, viableNeto, alquilerMensual, alquilerAnual, alquilerROI, ventaFinal, sellCommFinal, escribanoCostFinal, netSaleFinal, profitFinal, gananciaConMuebles, airbnbIngresoMensual, airbnbIngresoAnualBruto, airbnbGastosAnuales, airbnbIngresoAnualNeto };
+    return { buyPrice, refCost, closing, comisionCompra, escribanoCompra, totalCost, arv, arvM2, pctDelARV, nuevoTotal, sellComm, escribanoCost, netSale, profit, roi, roiAnual, viable, discVsNuevo, usandoCustom, expensasTotal, profitNeto, roiNeto, roiNetoAnual, viableNeto, roiMinimoExigido, alquilerMensual, alquilerAnual, alquilerROI, ventaFinal, sellCommFinal, escribanoCostFinal, netSaleFinal, profitFinal, gananciaConMuebles, airbnbIngresoMensual, airbnbIngresoAnualBruto, airbnbGastosAnuales, airbnbIngresoAnualNeto };
   }, [listPrice, m2, negPct, refType, refExtra, closingPct, comisionCompraPct, escribanoCompraPct, sellCommPct, escribanoPct, sellMonths, barrio, customUsadoM2, customNuevoM2, expensas, expensasMoneda, blueRate, alquilerM2, precioVentaCierre, valorMuebles, airbnbPrecioNoche, airbnbDiasMes, airbnbGastosMensuales]);
 
   const filtered = Object.keys(BARRIOS).filter(b =>
@@ -302,6 +314,82 @@ export default function FlipCalc() {
   );
 
   const now = new Date().toLocaleString("es-AR", { day:"2-digit", month:"2-digit", year:"2-digit", hour:"2-digit", minute:"2-digit" });
+
+  // MAO calculation
+  const maoCalc = useMemo(() => {
+    const arv = Number(maoArv) || 0;
+    const m2 = Number(maoM2) || 0;
+    const capex = m2 * maoCostoPorM2;
+    const gastosCompra = arv * maoGastosCompra / 100;
+    const opex = maoGastosTenenciaMes * maoDuracion;
+    const gastosVenta = arv * maoCostosVenta / 100;
+    const rentabilidadNecesaria = arv * (maoRentabilidadAnual / 100) * (maoDuracion / 12);
+    const mao = arv - capex - gastosCompra - opex - gastosVenta - rentabilidadNecesaria;
+    const pctDelArv = arv ? (mao / arv) * 100 : 0;
+    // ARV objetivo (modo inverso)
+    const arvObjetivo = maoArv ? 0 : 0; // se calcula si el usuario pone MAO y quiere saber ARV
+    return { arv, m2, capex, gastosCompra, opex, gastosVenta, rentabilidadNecesaria, mao, pctDelArv };
+  }, [maoArv, maoM2, maoCostoPorM2, maoGastosCompra, maoGastosTenenciaMes, maoDuracion, maoCostosVenta, maoRentabilidadAnual]);
+
+  const exportToExcel = () => {
+    const wb = XLSX.utils.book_new();
+    const rows = [];
+
+    // SECCIÓN 1: ANÁLISIS
+    rows.push(["ANÁLISIS DE INVERSIÓN", "", "", ""]);
+    rows.push(["Fecha", new Date().toLocaleDateString("es-AR"), "", ""]);
+    rows.push(["Usuario", currentUser, "", ""]);
+    rows.push([]);
+    rows.push(["Precio publicación", listPrice, "Total invertido", Math.round(c.totalCost)]);
+    rows.push(["Precio de compra", Math.round(c.buyPrice), "ARV", Math.round(c.arv || 0)]);
+    rows.push(["Barrio", barrio || "—", "Venta neta", Math.round(c.netSaleFinal || 0)]);
+    rows.push(["Superficie (m²)", m2, "Ganancia bruta", Math.round(c.profitFinal || 0)]);
+    rows.push(["Tipo refacción", refType, "Ganancia neta", Math.round(c.profitNeto || 0)]);
+    rows.push(["Plazo (meses)", sellMonths, "ROI neto total", `${c.roiNeto?.toFixed(2)}%`]);
+    rows.push(["% del ARV (compra)", `${c.pctDelARV?.toFixed(0)}%`, "ROI mínimo exigido", `${c.roiMinimoExigido?.toFixed(1)}%`]);
+    rows.push(["", "", "Viabilidad", c.viableNeto ? "✓ VIABLE" : "✕ NO VIABLE"]);
+    rows.push([]);
+
+    // SECCIÓN 2: MAO
+    if (maoCalc.arv > 0) {
+      rows.push(["CALCULADORA MAO", "", "", ""]);
+      rows.push(["ARV", maoCalc.arv, "CAPEX", maoCalc.capex]);
+      rows.push([`Gastos compra (${maoGastosCompra}%)`, Math.round(maoCalc.gastosCompra), `OPEX (${maoDuracion} meses)`, maoCalc.opex]);
+      rows.push([`Gastos venta (${maoCostosVenta}%)`, Math.round(maoCalc.gastosVenta), `Rentabilidad (${maoRentabilidadAnual}% anual)`, Math.round(maoCalc.rentabilidadNecesaria)]);
+      rows.push(["MAO (Máximo a Ofrecer)", Math.round(maoCalc.mao), "MAO % del ARV", `${maoCalc.pctDelArv.toFixed(0)}%`]);
+      rows.push(["Regla 70%", maoCalc.pctDelArv <= 70 ? "✓ Cumple" : "⚠ No cumple", "", ""]);
+      rows.push([]);
+    }
+
+    // SECCIÓN 3: WATCHLIST
+    if (watchlist.length > 0) {
+      rows.push(["WATCHLIST", "", "", "", "", "", "", "", ""]);
+      rows.push(["Nombre", "Barrio", "m²", "Precio compra", "Valor m²", "Ganancia", "ROI total", "ROI mínimo", "Viable", "% del ARV", "Fecha", "Link"]);
+      watchlist.forEach(w => {
+        const roiMinimo = w.roi_anual != null ? `${((w.roi_anual / 12) * 6).toFixed(1)}%` : "—";
+        const pctArv = w.datos?.buyPrice && w.arv ? `${((w.datos.buyPrice / w.arv) * 100).toFixed(0)}%` : "—";
+        rows.push([
+          w.nombre,
+          w.barrio,
+          w.m2,
+          w.datos?.buyPrice || "—",
+          w.datos?.buyPrice && w.m2 ? Math.round(w.datos.buyPrice / w.m2) : "—",
+          w.profit,
+          w.roi != null ? `${w.roi.toFixed(2)}%` : "—",
+          roiMinimo,
+          w.viable ? "✓ Sí" : "✕ No",
+          pctArv,
+          w.fecha,
+          w.link || "",
+        ]);
+      });
+    }
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws["!cols"] = [{ wch: 28 }, { wch: 16 }, { wch: 28 }, { wch: 16 }, { wch: 12 }, { wch: 14 }, { wch: 12 }, { wch: 14 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 40 }];
+    XLSX.utils.book_append_sheet(wb, ws, "flippar");
+    XLSX.writeFile(wb, `flippar_${new Date().toISOString().slice(0,10)}.xlsx`);
+  };
 
   const USERS = {
     "Daniela": "dani0812",
@@ -383,18 +471,19 @@ export default function FlipCalc() {
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <span style={{ fontSize: 12, color: C.textMuted }}>{currentUser}</span>
             <button onClick={handleLogout} style={{ fontSize: 12, color: C.accent, background: "transparent", border: "none", cursor: "pointer", fontFamily: "inherit", fontWeight: 600 }}>Salir</button>
+            <button onClick={exportToExcel} style={{ fontSize: 12, color: C.green, background: "transparent", border: `1px solid ${C.green}`, borderRadius: 6, cursor: "pointer", fontFamily: "inherit", fontWeight: 600, padding: "3px 8px" }}>⬇ Excel</button>
           </div>
         </div>
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: 0, marginTop: 0 }}>
-          {[["calc", "ANÁLISIS"], ["watchlist", `WATCHLIST${watchlist.length > 0 ? ` [${watchlist.length}]` : ""}`]].map(([key, label]) => (
+          {[["calc", "Análisis"], ["mao", "MAO"], ["watchlist", `Watchlist${watchlist.length > 0 ? ` (${watchlist.length})` : ""}`]].map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)} style={{
-              padding: "10px 18px 9px", fontSize: 11, fontWeight: 700,
+              padding: "10px 18px 9px", fontSize: 13, fontWeight: tab === key ? 600 : 400,
               background: "transparent", border: "none",
               borderBottom: `2px solid ${tab === key ? C.accent : "transparent"}`,
               color: tab === key ? C.accent : C.textMuted,
-              cursor: "pointer", letterSpacing: "0.1em",
+              cursor: "pointer", letterSpacing: "-0.01em",
               fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif", transition: "all 0.15s",
             }}>{label}</button>
           ))}
@@ -426,24 +515,6 @@ export default function FlipCalc() {
                 <div style={{ position: "absolute", top: "50%", left: `${Math.min(((listPrice - 30000) / (400000 - 30000)) * 100, 100)}%`, transform: "translate(-50%, -50%)", width: 14, height: 14, borderRadius: "50%", background: C.panel, border: `2px solid ${C.accent}`, boxShadow: "0 1px 4px rgba(0,0,0,0.15)", pointerEvents: "none" }} />
               </div>
             </div>
-            <Slider label="Descuento negociación" min={0} max={20} step={1} value={negPct} onChange={setNegPct} suffix="%" />
-
-            <div style={{ background: C.accentDim, border: `1px solid ${C.accent}`, borderRadius: 6, padding: "12px 16px", marginBottom: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: C.accent, letterSpacing: "0.1em", textTransform: "uppercase" }}>Precio de compra</span>
-              <span style={{ fontSize: 22, fontWeight: 700, color: C.text, fontFamily: C.mono }}>{fmtUSD(Math.round(c.buyPrice))}</span>
-            </div>
-            {m2 > 0 && (
-              <div style={{ fontSize: 12, color: C.textMuted, textAlign: "right", marginBottom: 4, fontFamily: C.mono }}>
-                = {fmtUSD(Math.round(c.buyPrice / m2))}/m² al comprar
-              </div>
-            )}
-            {c.pctDelARV != null && (
-              <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 24 }}>
-                <span style={{ fontSize: 12, fontWeight: 700, fontFamily: C.mono, color: c.pctDelARV <= 70 ? C.green : c.pctDelARV <= 85 ? C.amber : C.red, background: c.pctDelARV <= 70 ? C.greenDim : c.pctDelARV <= 85 ? C.amberDim : C.redDim, padding: "3px 10px", borderRadius: 6 }}>
-                  {c.pctDelARV.toFixed(0)}% del ARV
-                </span>
-              </div>
-            )}
 
             <div style={{ marginBottom: 24 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
@@ -490,10 +561,10 @@ export default function FlipCalc() {
               </div>
             </div>
 
-            {/* Precios custom */}
+            {/* Precios custom / comparables */}
             {barrio && (
               <div style={{ background: C.panelAlt, border: `1px solid ${C.border}`, borderRadius: 6, padding: "14px 16px", marginBottom: 20 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: C.textSub, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 4 }}>Precios relevados en ZonaProp</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: C.textSub, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 4 }}>Comparables / Precios relevados</div>
                 <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 10, fontFamily: C.mono }}>
                   REF: a reciclar {fmt(BARRIOS[barrio].sin_ref)} · reciclado {fmt(BARRIOS[barrio].reciclado)} · nuevo {fmt(BARRIOS[barrio].nuevo)} USD/m²
                 </div>
@@ -523,6 +594,35 @@ export default function FlipCalc() {
                   ))}
                 </div>
                 {c.usandoCustom && <div style={{ marginTop: 10, fontSize: 11, fontWeight: 700, color: C.accent, fontFamily: C.mono }}>▶ USANDO PRECIOS RELEVADOS</div>}
+              </div>
+            )}
+
+            {/* ARV preview anticipado */}
+            {barrio && m2 > 0 && (
+              <div style={{ background: C.panel, border: `1px solid ${C.green}`, borderRadius: 12, padding: "16px 16px", marginBottom: 24 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: C.green, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>ARV estimado</div>
+                <div style={{ fontSize: 26, fontWeight: 700, color: C.text, fontFamily: C.mono }}>{fmtUSD(Math.round(c.arv || 0))}</div>
+                <div style={{ fontSize: 12, color: C.textMuted, marginTop: 4, fontFamily: C.mono }}>{fmt(c.arvM2)} USD/m² × {m2} m²</div>
+              </div>
+            )}
+
+            <SectionHeader title="Tu oferta" sub="Lo que vas a pagar" mt={4} />
+            <Slider label="Descuento negociación" min={0} max={20} step={1} value={negPct} onChange={setNegPct} suffix="%" />
+
+            <div style={{ background: C.accentDim, border: `1px solid ${C.accent}`, borderRadius: 6, padding: "12px 16px", marginBottom: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: C.accent, letterSpacing: "0.1em", textTransform: "uppercase" }}>Precio de compra</span>
+              <span style={{ fontSize: 22, fontWeight: 700, color: C.text, fontFamily: C.mono }}>{fmtUSD(Math.round(c.buyPrice))}</span>
+            </div>
+            {m2 > 0 && (
+              <div style={{ fontSize: 12, color: C.textMuted, textAlign: "right", marginBottom: 4, fontFamily: C.mono }}>
+                = {fmtUSD(Math.round(c.buyPrice / m2))}/m² al comprar
+              </div>
+            )}
+            {c.pctDelARV != null && (
+              <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 24 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, fontFamily: C.mono, color: c.pctDelARV <= 70 ? C.green : c.pctDelARV <= 85 ? C.amber : C.red, background: c.pctDelARV <= 70 ? C.greenDim : c.pctDelARV <= 85 ? C.amberDim : C.redDim, padding: "3px 10px", borderRadius: 6 }}>
+                  {c.pctDelARV.toFixed(0)}% del ARV
+                </span>
               </div>
             )}
 
@@ -709,7 +809,8 @@ export default function FlipCalc() {
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
                   <StatBox label="ROI neto total" value={`${c.roiNeto?.toFixed(2)}%`}
-                    color={c.roiNeto > 10 ? C.green : C.red} />
+                    color={c.roiNeto > c.roiMinimoExigido ? C.green : C.red}
+                    sub={`mínimo exigido: ${c.roiMinimoExigido?.toFixed(1)}%`} />
                   <StatBox label={`ROI neto anual`}
                     value={`${c.roiNetoAnual?.toFixed(2)}%`}
                     color={c.roiNetoAnual > 15 ? C.green : c.roiNetoAnual > 0 ? C.amber : C.red}
@@ -724,7 +825,7 @@ export default function FlipCalc() {
                   <div style={{ fontSize: 14, color: c.viableNeto ? "#065F46" : "#991B1B", lineHeight: 1.7 }}>
                     {c.viableNeto
                       ? `Compra: ${fmtUSD(Math.round(c.buyPrice))} → Venta: ${fmtUSD(Math.round(c.ventaFinal))} → Ganancia neta: ${fmtUSD(Math.round(c.profitNeto))} (${c.roiNeto?.toFixed(1)}% en ${sellMonths} meses)`
-                      : `Con estos números el flip no cierra. Total invertido ${fmtUSD(Math.round(c.totalCost))} + expensas ${fmtUSD(c.expensasTotal)} deja margen insuficiente.`
+                      : `Con estos números el flip no cierra: ROI neto ${c.roiNeto?.toFixed(1)}% no alcanza el mínimo exigido de ${c.roiMinimoExigido?.toFixed(1)}% para ${sellMonths} meses (regla: 10% cada 6 meses).`
                     }
                   </div>
                 </div>
@@ -876,6 +977,140 @@ export default function FlipCalc() {
                 }}>
                   Guardar en Watchlist
                 </button>
+              </>
+            )}
+          </>
+        )}
+
+        {/* ===== MAO ===== */}
+        {tab === "mao" && (
+          <>
+            {/* Modo selector */}
+            <div style={{ display: "flex", gap: 8, marginTop: 24, marginBottom: 24 }}>
+              {[["mao", "Calcular MAO"], ["arv", "Calcular ARV Objetivo"]].map(([key, label]) => (
+                <button key={key} onClick={() => setMaoModo(key)} style={{
+                  flex: 1, padding: "10px 0", fontSize: 13, fontWeight: 600,
+                  background: maoModo === key ? C.accent : C.panelAlt,
+                  border: `1px solid ${maoModo === key ? C.accent : C.border}`,
+                  borderRadius: 12, cursor: "pointer",
+                  color: maoModo === key ? "#fff" : C.textSub,
+                  fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif",
+                }}>{label}</button>
+              ))}
+            </div>
+
+            {/* Descripción */}
+            <div style={{ background: C.accentDim, borderRadius: 12, padding: "12px 16px", marginBottom: 24, fontSize: 13, color: C.accent, lineHeight: 1.6 }}>
+              {maoModo === "mao"
+                ? "Ingresá el ARV y los costos del proyecto → la calculadora te dice el máximo que podés pagar (MAO)"
+                : "Ingresá el precio de compra y los costos → la calculadora te dice el ARV mínimo necesario para que el negocio cierre"
+              }
+            </div>
+
+            {/* ARV input */}
+            <SectionHeader title="ARV (Valor post-refacción)" sub="Lo que vas a vender" mt={0} />
+            <div style={{ background: C.panel, borderRadius: 12, padding: "16px", marginBottom: 16 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>ARV estimado (USD)</div>
+              <input type="number" value={maoArv} onChange={e => setMaoArv(e.target.value)} placeholder="ej: 120000"
+                style={{ width: "100%", boxSizing: "border-box", padding: "12px 14px", background: C.bg, border: `1.5px solid ${maoArv ? C.accent : C.border}`, borderRadius: 10, color: C.text, fontSize: 22, fontWeight: 700, fontFamily: C.mono, outline: "none" }} />
+              <div style={{ fontSize: 11, color: C.textMuted, marginTop: 8 }}>
+                El ARV es el precio de venta estimado una vez terminada la refacción. Basalo en comparables reales de la zona.
+              </div>
+            </div>
+
+            {/* Remodelación */}
+            <SectionHeader title="Remodelación (CAPEX)" sub="Costo de obra" mt={8} />
+            <div style={{ background: C.panel, borderRadius: 12, padding: "16px", marginBottom: 16 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Superficie (m²)</div>
+                  <input type="number" value={maoM2} onChange={e => setMaoM2(e.target.value)} placeholder="ej: 45"
+                    style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: C.bg, border: `1.5px solid ${maoM2 ? C.accent : C.border}`, borderRadius: 10, color: C.text, fontSize: 18, fontWeight: 700, fontFamily: C.mono, outline: "none" }} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Costo por m² (USD)</div>
+                  <input type="number" value={maoCostoPorM2} onChange={e => setMaoCostoPorM2(Number(e.target.value) || 0)}
+                    style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: C.bg, border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 18, fontWeight: 700, fontFamily: C.mono, outline: "none" }} />
+                </div>
+              </div>
+              {maoCalc.capex > 0 && (
+                <div style={{ background: C.panelAlt, borderRadius: 8, padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: 12, color: C.textMuted }}>Total CAPEX</span>
+                  <span style={{ fontSize: 16, fontWeight: 700, color: C.text, fontFamily: C.mono }}>{fmtUSD(maoCalc.capex)}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Gastos */}
+            <SectionHeader title="Gastos del proyecto" sub="Compra · Tenencia · Venta" mt={8} />
+            <div style={{ background: C.panel, borderRadius: 12, padding: "16px", marginBottom: 16 }}>
+              <Slider label="Gastos de compra (comisión + escribano)" min={0} max={15} step={0.5} value={maoGastosCompra} onChange={setMaoGastosCompra} suffix="%" />
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>OPEX mensual (USD)</div>
+                  <input type="number" value={maoGastosTenenciaMes} onChange={e => setMaoGastosTenenciaMes(Number(e.target.value) || 0)}
+                    style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: C.bg, border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 16, fontWeight: 700, fontFamily: C.mono, outline: "none" }} />
+                  <div style={{ fontSize: 10, color: C.textMuted, marginTop: 4 }}>expensas, luz, etc.</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Duración (meses)</div>
+                  <input type="number" value={maoDuracion} onChange={e => setMaoDuracion(Number(e.target.value) || 1)}
+                    style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: C.bg, border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 16, fontWeight: 700, fontFamily: C.mono, outline: "none" }} />
+                </div>
+              </div>
+              <Slider label="Gastos de venta (comisión + escribano)" min={0} max={15} step={0.5} value={maoCostosVenta} onChange={setMaoCostosVenta} suffix="%" />
+            </div>
+
+            {/* Rentabilidad */}
+            <SectionHeader title="Rentabilidad objetivo" sub="Metodología Flipping Master" mt={8} />
+            <div style={{ background: C.panel, borderRadius: 12, padding: "16px", marginBottom: 24 }}>
+              <Slider label="Rentabilidad anual bruta del proyecto" min={10} max={80} step={5} value={maoRentabilidadAnual} onChange={setMaoRentabilidadAnual} suffix="%" />
+              <div style={{ fontSize: 12, color: C.textMuted, lineHeight: 1.6 }}>
+                Flipping Master usa 40% anual bruto (20% para el inversor + 20% para el operador). Si trabajás solo, podés usar 20%.
+              </div>
+            </div>
+
+            {/* Resultado MAO */}
+            {maoCalc.arv > 0 && (
+              <>
+                <div style={{ background: C.panel, border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden", marginBottom: 16 }}>
+                  <div style={{ padding: "12px 16px", background: C.panelAlt, borderBottom: `1px solid ${C.border}` }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.06em" }}>Desglose del cálculo</div>
+                  </div>
+                  <div style={{ padding: "0 16px" }}>
+                    <Row label="ARV (precio de venta)" value={fmtUSD(maoCalc.arv)} valueColor={C.green} bold />
+                    <Row label={`− CAPEX (${maoM2 || 0}m² × $${fmt(maoCostoPorM2)}/m²)`} value={`−${fmtUSD(maoCalc.capex)}`} valueColor={C.red} />
+                    <Row label={`− Gastos de compra (${maoGastosCompra}%)`} value={`−${fmtUSD(Math.round(maoCalc.gastosCompra))}`} valueColor={C.red} />
+                    <Row label={`− OPEX ($${fmt(maoGastosTenenciaMes)}/mes × ${maoDuracion} meses)`} value={`−${fmtUSD(maoCalc.opex)}`} valueColor={C.red} />
+                    <Row label={`− Gastos de venta (${maoCostosVenta}%)`} value={`−${fmtUSD(Math.round(maoCalc.gastosVenta))}`} valueColor={C.red} />
+                    <Row label={`− Rentabilidad (${maoRentabilidadAnual}% anual × ${maoDuracion} meses)`} value={`−${fmtUSD(Math.round(maoCalc.rentabilidadNecesaria))}`} valueColor={C.amber} />
+                  </div>
+                </div>
+
+                {/* MAO result box */}
+                <div style={{ background: maoCalc.mao > 0 ? C.greenDim : C.redDim, border: `2px solid ${maoCalc.mao > 0 ? C.green : C.red}`, borderRadius: 16, padding: "24px 20px", marginBottom: 16, textAlign: "center" }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: maoCalc.mao > 0 ? C.green : C.red, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>
+                    {maoCalc.mao > 0 ? "MAO — Máximo a Ofrecer" : "ARV insuficiente para este costo"}
+                  </div>
+                  <div style={{ fontSize: 38, fontWeight: 700, color: C.text, fontFamily: C.mono, letterSpacing: "-0.02em", marginBottom: 8 }}>
+                    {maoCalc.mao > 0 ? fmtUSD(Math.round(maoCalc.mao)) : "—"}
+                  </div>
+                  {maoCalc.mao > 0 && (
+                    <>
+                      <div style={{ fontSize: 14, color: C.textSub, marginBottom: 12 }}>
+                        {maoCalc.pctDelArv.toFixed(0)}% del ARV
+                      </div>
+                      <div style={{ fontSize: 12, color: C.textMuted, lineHeight: 1.6 }}>
+                        No debés pagar más de <strong>{fmtUSD(Math.round(maoCalc.mao))}</strong> por esta propiedad para que el negocio cierre con una rentabilidad del {maoRentabilidadAnual}% anual en {maoDuracion} meses.
+                      </div>
+                      <div style={{ marginTop: 16, padding: "10px 14px", background: maoCalc.pctDelArv <= 70 ? C.greenDim : C.amberDim, borderRadius: 8, display: "inline-block" }}>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: maoCalc.pctDelArv <= 70 ? C.green : C.amber }}>
+                          {maoCalc.pctDelArv <= 70 ? `✓ Cumple la regla del 70% del ARV` : `⚠ Por encima del 70% del ARV (${maoCalc.pctDelArv.toFixed(0)}%)`}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </div>
               </>
             )}
           </>
