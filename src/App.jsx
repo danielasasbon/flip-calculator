@@ -622,6 +622,8 @@ export default function FlipCalc() {
                   const arvSitio = maoPrecioVentaM2 && maoM2 ? Number(maoPrecioVentaM2) * Number(maoM2) : 0;
                   const capexSitio = refRates[refType] * Number(maoM2 || 0);
                   const precioPublicado = Number(maoArv) || 0;
+                  const ofertaSugerida = precioPublicado * (1 - maoGastosCompra / 100 * 0); // precio publicado como referencia
+                  const margenNegociacion = maoSitio > 0 ? precioPublicado - maoSitio : 0;
                   const gastosCompra = arvSitio * maoGastosCompra / 100;
                   const gastosVenta = arvSitio * maoCostosVenta / 100;
                   const opexTotal = maoGastosTenenciaMes * maoDuracion;
@@ -667,16 +669,16 @@ export default function FlipCalc() {
                         )}
                       </div>
 
-                      {/* Veredicto vs precio publicado */}
-                      {precioPublicado > 0 && (
-                        <div style={{ background: precioPublicado <= maoSitio ? "#0D2B1D" : "#2B0D0D", border: `1.5px solid ${precioPublicado <= maoSitio ? "#34C759" : "#FF3B30"}`, borderRadius: 12, padding: "14px 16px", textAlign: "center" }}>
-                          <div style={{ fontSize: 16, fontWeight: 800, color: precioPublicado <= maoSitio ? "#34C759" : "#FF3B30" }}>
-                            {precioPublicado <= maoSitio ? "✓ ENTRA" : "✕ NO ENTRA"}
-                          </div>
-                          <div style={{ fontSize: 11, color: "#8A8FA8", marginTop: 6, lineHeight: 1.5 }}>
-                            Publicado {fmtUSD(precioPublicado)} {precioPublicado <= maoSitio ? "≤" : ">"} MAO {fmtUSD(Math.round(maoSitio))}
-                            {precioPublicado > maoSitio && <div style={{ marginTop: 4 }}>Diferencia: {fmtUSD(Math.round(precioPublicado - maoSitio))} sobre el MAO</div>}
-                          </div>
+                      {/* Veredicto */}
+                      {precioPublicado > 0 && maoSitio > 0 && (
+                        <div style={{ background: "#1C1F2E", border: `1.5px solid #F5A623`, borderRadius: 12, padding: "14px 16px", textAlign: "center" }}>
+                          <div style={{ fontSize: 11, color: "#8A8FA8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Tu oferta máxima</div>
+                          <div style={{ fontSize: 26, fontWeight: 800, color: "#F5A623", fontFamily: "monospace", marginBottom: 6 }}>{fmtUSD(Math.round(maoSitio))}</div>
+                          {margenNegociacion > 0 && (
+                            <div style={{ fontSize: 12, color: "#8A8FA8", lineHeight: 1.5 }}>
+                              Publicado {fmtUSD(precioPublicado)} → necesitás negociar <span style={{ color: "#34C759", fontWeight: 700 }}>−{fmtUSD(Math.round(margenNegociacion))}</span>
+                            </div>
+                          )}
                         </div>
                       )}
                     </>
