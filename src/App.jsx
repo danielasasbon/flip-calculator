@@ -9,6 +9,7 @@ const supabase = createClient(
 
 const fmt = (n) => new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 }).format(n);
 const fmtUSD = (n) => "USD " + fmt(n);
+const refRates = { estetica: 300, media: 500, integral: 850 };
 
 const BARRIOS = {
   // Precios actualizados jun-2026. Fuentes: Mudafy ene-2026, Ambito dic-2025, Zonaprop feb-2026, RE/MAX
@@ -194,7 +195,6 @@ export default function FlipCalc() {
     await supabase.from("watchlist").delete().eq("id", id);
   };
 
-  const refRates  = { estetica: 300, media: 500, integral: 850 };
   const refLabels = { estetica: "Estética", media: "Media", integral: "Integral" };
   const refDesc   = { estetica: "200–400/m²", media: "400–700/m²", integral: "700–1.000/m²" };
 
