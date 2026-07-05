@@ -626,12 +626,12 @@ const BARRIOS = {
                   const capexSitio = refRates[refType] * Number(maoM2 || 0);
                   const precioPublicado = Number(maoArv) || 0;
                   const ofertaSugerida = precioPublicado * (1 - maoGastosCompra / 100 * 0); // precio publicado como referencia
-                  const margenNegociacion = maoSitio > 0 ? precioPublicado - maoSitio : 0;
                   const gastosCompra = arvSitio * maoGastosCompra / 100;
                   const gastosVenta = arvSitio * maoCostosVenta / 100;
                   const opexTotal = maoGastosTenenciaMes * maoDuracion;
                   const rentabilidad = arvSitio * (maoRentabilidadAnual / 100) * (maoDuracion / 12);
                   const maoSitio = arvSitio - capexSitio - gastosCompra - opexTotal - gastosVenta - rentabilidad;
+                  const margenNegociacion = maoSitio > 0 ? precioPublicado - maoSitio : 0;
                   const pxm2Compra = maoSitio && maoM2 ? Math.round(maoSitio / Number(maoM2)) : 0;
                   const pxm2Venta = Number(maoPrecioVentaM2) || 0;
 
