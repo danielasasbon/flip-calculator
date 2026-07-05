@@ -678,6 +678,380 @@ export default function FlipCalc() {
         {/* ===== MAO ===== */}
         {tab === "mao" && (
           <div style={{ paddingTop: 20, paddingBottom: 40 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+
+              {/* LEFT — Inputs */}
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#8A8FA8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 16 }}>Datos de la propiedad</div>
+
+                {/* Dirección */}
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ fontSize: 11, color: "#8A8FA8", marginBottom: 5 }}>Dirección / calle</div>
+                  <input type="text" value={maoArv === "" ? "" : undefined} onChange={() => {}}
+                    placeholder="ej: Charcas 4091"
+                    id="mao-direccion"
+                    style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: "#1C1F2E", border: "1.5px solid #2A2D3E", borderRadius: 8, color: "#FFFFFF", fontSize: 14, outline: "none" }} />
+                </div>
+
+                {/* Precio publicado */}
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ fontSize: 11, color: "#8A8FA8", marginBottom: 5 }}>Precio publicado (USD)</div>
+                  <input type="number" value={maoArv} onChange={e => setMaoArv(e.target.value)} placeholder="ej: 90000"
+                    style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: "#1C1F2E", border: `1.5px solid ${maoArv ? "#3A8EF6" : "#2A2D3E"}`, borderRadius: 8, color: "#FFFFFF", fontSize: 17, fontWeight: 700, fontFamily: "monospace", outline: "none" }} />
+                </div>
+
+                {/* m2 y Barrio */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
+                  <div>
+                    <div style={{ fontSize: 11, color: "#8A8FA8", marginBottom: 5 }}>Superficie (m²)</div>
+                    <input type="number" value={maoM2} onChange={e => setMaoM2(e.target.value)} placeholder="ej: 45"
+                      style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: "#1C1F2E", border: `1.5px solid ${maoM2 ? "#3A8EF6" : "#2A2D3E"}`, borderRadius: 8, color: "#FFFFFF", fontSize: 17, fontWeight: 700, fontFamily: "monospace", outline: "none" }} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 11, color: "#8A8FA8", marginBottom: 5 }}>Barrio</div>
+                    <div style={{ position: "relative" }}>
+                      <input type="text" placeholder="Buscar..." value={barrioInput}
+                        onChange={(e) => { setBarrioInput(e.target.value); setShowSug(true); if (!e.target.value) setBarrio(null); }}
+                        onFocus={() => setShowSug(true)}
+                        style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: "#1C1F2E", border: `1.5px solid ${barrio ? "#34C759" : "#2A2D3E"}`, borderRadius: 8, color: "#FFFFFF", fontSize: 13, outline: "none" }} />
+                      {barrio && <span style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", fontSize: 10, color: "#34C759", fontWeight: 700 }}>✓</span>}
+                      {showSug && filtered.length > 0 && (
+                        <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 10, background: "#1C1F2E", border: "1px solid #2A2D3E", borderRadius: 8, marginTop: 2, maxHeight: 180, overflowY: "auto" }}>
+                          {filtered.map(b => (
+                            <div key={b} onClick={() => selectBarrio(b)}
+                              style={{ padding: "9px 12px", cursor: "pointer", fontSize: 13, color: "#FFFFFF", borderBottom: "1px solid #2A2D3E" }}
+                              onMouseEnter={e => e.currentTarget.style.background = "#2A2D3E"}
+                              onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                            >{b}</div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tipo refacción */}
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ fontSize: 11, color: "#8A8FA8", marginBottom: 8 }}>Tipo de refacción</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
+                    {Object.entries(refRates).map(([k, v]) => (
+                      <button key={k} onClick={() => setRefType(k)} style={{
+                        padding: "8px 4px", fontSize: 11, fontWeight: 700,
+                        background: refType === k ? "#F5A623" : "#1C1F2E",
+                        border: `1px solid ${refType === k ? "#F5A623" : "#2A2D3E"}`,
+                        borderRadius: 8, cursor: "pointer",
+                        color: refType === k ? "#000" : "#8A8FA8",
+                      }}>
+                        <div>{k.charAt(0).toUpperCase() + k.slice(1)}</div>
+                        <div style={{ fontSize: 9, marginTop: 2, opacity: 0.8 }}>${fmt(v)}/m²</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Gastos y operación */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
+                  <div>
+                    <div style={{ fontSize: 11, color: "#8A8FA8", marginBottom: 5 }}>Gastos compra (%)</div>
+                    <input type="number" value={maoGastosCompra} onChange={e => setMaoGastosCompra(Number(e.target.value) || 0)} placeholder="6"
+                      style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: "#1C1F2E", border: "1.5px solid #2A2D3E", borderRadius: 8, color: "#FFFFFF", fontSize: 15, fontWeight: 700, fontFamily: "monospace", outline: "none" }} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 11, color: "#8A8FA8", marginBottom: 5 }}>Gastos venta (%)</div>
+                    <input type="number" value={maoCostosVenta} onChange={e => setMaoCostosVenta(Number(e.target.value) || 0)} placeholder="5"
+                      style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: "#1C1F2E", border: "1.5px solid #2A2D3E", borderRadius: 8, color: "#FFFFFF", fontSize: 15, fontWeight: 700, fontFamily: "monospace", outline: "none" }} />
+                  </div>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
+                  <div>
+                    <div style={{ fontSize: 11, color: "#8A8FA8", marginBottom: 5 }}>OPEX mensual (USD)</div>
+                    <input type="number" value={maoGastosTenenciaMes} onChange={e => setMaoGastosTenenciaMes(Number(e.target.value) || 0)} placeholder="200"
+                      style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: "#1C1F2E", border: "1.5px solid #2A2D3E", borderRadius: 8, color: "#FFFFFF", fontSize: 15, fontWeight: 700, fontFamily: "monospace", outline: "none" }} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 11, color: "#8A8FA8", marginBottom: 5 }}>Duración (meses)</div>
+                    <input type="number" value={maoDuracion} onChange={e => setMaoDuracion(Number(e.target.value) || 1)} placeholder="8"
+                      style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: "#1C1F2E", border: "1.5px solid #2A2D3E", borderRadius: 8, color: "#FFFFFF", fontSize: 15, fontWeight: 700, fontFamily: "monospace", outline: "none" }} />
+                  </div>
+                </div>
+
+                {/* Precio x m2 de venta */}
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ fontSize: 11, color: "#8A8FA8", marginBottom: 5 }}>Precio x m² de venta (USD) — relevado en zona</div>
+                  <input type="number" value={maoCostoPorM2} onChange={e => setMaoCostoPorM2(Number(e.target.value) || 0)} placeholder="ej: 2900"
+                    style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: "#1C1F2E", border: `1.5px solid ${maoCostoPorM2 ? "#F5A623" : "#2A2D3E"}`, borderRadius: 8, color: "#FFFFFF", fontSize: 17, fontWeight: 700, fontFamily: "monospace", outline: "none" }} />
+                  {barrio && <div style={{ fontSize: 10, color: "#8A8FA8", marginTop: 4 }}>Ref zona: reciclado {fmtUSD(BARRIOS[barrio]?.reciclado || 0)}/m²</div>}
+                </div>
+
+                {/* Rentabilidad */}
+                <div style={{ marginBottom: 4 }}>
+                  <div style={{ fontSize: 11, color: "#8A8FA8", marginBottom: 5 }}>Rentabilidad anual objetivo (%)</div>
+                  <input type="number" value={maoRentabilidadAnual} onChange={e => setMaoRentabilidadAnual(Number(e.target.value) || 0)} placeholder="40"
+                    style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: "#1C1F2E", border: "1.5px solid #2A2D3E", borderRadius: 8, color: "#FFFFFF", fontSize: 15, fontWeight: 700, fontFamily: "monospace", outline: "none" }} />
+                  <div style={{ fontSize: 10, color: "#8A8FA8", marginTop: 4, borderLeft: "2px solid #F5A623", paddingLeft: 8 }}>Flipping Master: 40% anual (20% inversor + 20% operador)</div>
+                </div>
+              </div>
+
+              {/* RIGHT — Resultados */}
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#8A8FA8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 16 }}>Resultado</div>
+
+                {(() => {
+                  const arvSitio = maoCostoPorM2 && maoM2 ? maoCostoPorM2 * Number(maoM2) : 0;
+                  const capexSitio = refRates[refType] * Number(maoM2 || 0);
+                  const precioPublicado = Number(maoArv) || 0;
+                  const gastosCompra = arvSitio * maoGastosCompra / 100;
+                  const gastosVenta = arvSitio * maoCostosVenta / 100;
+                  const opexTotal = maoGastosTenenciaMes * maoDuracion;
+                  const rentabilidad = arvSitio * (maoRentabilidadAnual / 100) * (maoDuracion / 12);
+                  const maoSitio = arvSitio - capexSitio - gastosCompra - opexTotal - gastosVenta - rentabilidad;
+                  const pxm2Compra = maoSitio && maoM2 ? Math.round(maoSitio / Number(maoM2)) : 0;
+                  const pxm2Venta = Number(maoCostoPorM2) || 0;
+
+                  return arvSitio > 0 ? (
+                    <>
+                      {/* ARV */}
+                      <div style={{ background: "#1C1F2E", borderRadius: 12, padding: "14px 16px", marginBottom: 10, border: "1px solid #34C759" }}>
+                        <div style={{ fontSize: 10, color: "#34C759", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>ARV estimado</div>
+                        <div style={{ fontSize: 28, fontWeight: 800, color: "#34C759", fontFamily: "monospace" }}>{fmtUSD(Math.round(arvSitio))}</div>
+                        <div style={{ fontSize: 11, color: "#8A8FA8", marginTop: 2 }}>{fmtUSD(pxm2Venta)}/m² × {maoM2} m²</div>
+                      </div>
+
+                      {/* CAPEX */}
+                      <div style={{ background: "#1C1F2E", borderRadius: 10, padding: "12px 14px", marginBottom: 10, border: "1px solid #2A2D3E" }}>
+                        <div style={{ fontSize: 10, color: "#8A8FA8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>CAPEX (refacción)</div>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: "#FF6B6B", fontFamily: "monospace" }}>−{fmtUSD(capexSitio)}</div>
+                        <div style={{ fontSize: 10, color: "#8A8FA8", marginTop: 2 }}>${fmt(refRates[refType])}/m² × {maoM2} m²</div>
+                      </div>
+
+                      {/* MAO */}
+                      <div style={{ background: maoSitio > 0 ? "#1C1F2E" : "#2B0D0D", borderRadius: 14, padding: "18px 16px", marginBottom: 10, border: `2px solid ${maoSitio > 0 ? "#F5A623" : "#FF3B30"}`, textAlign: "center" }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: "#8A8FA8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>MAO — Máximo a Ofrecer</div>
+                        <div style={{ fontSize: 34, fontWeight: 800, color: maoSitio > 0 ? "#F5A623" : "#FF3B30", fontFamily: "monospace" }}>
+                          {maoSitio > 0 ? fmtUSD(Math.round(maoSitio)) : "—"}
+                        </div>
+                        {maoSitio > 0 && Number(maoM2) > 0 && (
+                          <div style={{ display: "flex", justifyContent: "center", gap: 20, marginTop: 12, paddingTop: 10, borderTop: "1px solid #2A2D3E" }}>
+                            <div style={{ textAlign: "center" }}>
+                              <div style={{ fontSize: 9, color: "#8A8FA8", textTransform: "uppercase", marginBottom: 2 }}>MAO / m²</div>
+                              <div style={{ fontSize: 14, fontWeight: 700, color: "#F5A623", fontFamily: "monospace" }}>{fmtUSD(pxm2Compra)}</div>
+                            </div>
+                            <div style={{ width: 1, background: "#2A2D3E" }} />
+                            <div style={{ textAlign: "center" }}>
+                              <div style={{ fontSize: 9, color: "#8A8FA8", textTransform: "uppercase", marginBottom: 2 }}>ARV / m²</div>
+                              <div style={{ fontSize: 14, fontWeight: 700, color: "#34C759", fontFamily: "monospace" }}>{fmtUSD(pxm2Venta)}</div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Veredicto vs precio publicado */}
+                      {precioPublicado > 0 && (
+                        <div style={{ background: precioPublicado <= maoSitio ? "#0D2B1D" : "#2B0D0D", border: `1.5px solid ${precioPublicado <= maoSitio ? "#34C759" : "#FF3B30"}`, borderRadius: 12, padding: "14px 16px", textAlign: "center" }}>
+                          <div style={{ fontSize: 16, fontWeight: 800, color: precioPublicado <= maoSitio ? "#34C759" : "#FF3B30" }}>
+                            {precioPublicado <= maoSitio ? "✓ ENTRA" : "✕ NO ENTRA"}
+                          </div>
+                          <div style={{ fontSize: 11, color: "#8A8FA8", marginTop: 6, lineHeight: 1.5 }}>
+                            Publicado {fmtUSD(precioPublicado)} {precioPublicado <= maoSitio ? "≤" : ">"} MAO {fmtUSD(Math.round(maoSitio))}
+                            {precioPublicado > maoSitio && <div style={{ marginTop: 4 }}>Diferencia: {fmtUSD(Math.round(precioPublicado - maoSitio))} sobre el MAO</div>}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div style={{ background: "#1C1F2E", borderRadius: 14, padding: "40px 20px", textAlign: "center" }}>
+                      <div style={{ fontSize: 32, marginBottom: 12 }}>🏠</div>
+                      <div style={{ fontSize: 13, color: "#8A8FA8", lineHeight: 1.6 }}>Ingresá el precio x m² de venta y los m² para ver el resultado</div>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          </div>
+        )}
+
+
+        {tab === "calc" && (
+          <div style={{ margin: "0 -20px" }}>
+            <div style={{ background: "#0F1117", minHeight: "calc(100vh - 100px)", padding: "20px 20px 40px" }}>
+
+              {/* Two column layout */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+
+                {/* LEFT — Inputs mínimos */}
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#8A8FA8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 16 }}>Datos de la propiedad</div>
+
+                  {[
+                    { label: "Precio publicación (USD)", val: listPrice || "", set: v => setListPrice(Number(v) || 0), placeholder: "ej: 90000" },
+                    { label: "Superficie (m²)", val: m2 || "", set: v => setM2(Number(v) || 0), placeholder: "ej: 45" },
+                  ].map(({ label, val, set, placeholder }) => (
+                    <div key={label} style={{ marginBottom: 12 }}>
+                      <div style={{ fontSize: 11, color: "#8A8FA8", marginBottom: 5, fontWeight: 500 }}>{label}</div>
+                      <input type="number" value={val} onChange={e => set(e.target.value)} placeholder={placeholder}
+                        style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: "#1C1F2E", border: `1.5px solid ${val ? "#3A8EF6" : "#2A2D3E"}`, borderRadius: 8, color: "#FFFFFF", fontSize: 17, fontWeight: 700, fontFamily: "monospace", outline: "none" }} />
+                    </div>
+                  ))}
+
+                  {/* Barrio */}
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ fontSize: 11, color: "#8A8FA8", marginBottom: 5, fontWeight: 500 }}>Barrio</div>
+                    <div style={{ position: "relative" }}>
+                      <input type="text" placeholder="Buscar barrio..." value={barrioInput}
+                        onChange={(e) => { setBarrioInput(e.target.value); setShowSug(true); if (!e.target.value) setBarrio(null); }}
+                        onFocus={() => setShowSug(true)}
+                        style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: "#1C1F2E", border: `1.5px solid ${barrio ? "#34C759" : "#2A2D3E"}`, borderRadius: 8, color: "#FFFFFF", fontSize: 15, fontWeight: 600, outline: "none" }} />
+                      {barrio && <span style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", fontSize: 11, color: "#34C759", fontWeight: 700 }}>✓</span>}
+                      {showSug && filtered.length > 0 && (
+                        <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 10, background: "#1C1F2E", border: `1px solid #2A2D3E`, borderRadius: 8, marginTop: 2, maxHeight: 200, overflowY: "auto" }}>
+                          {filtered.map(b => (
+                            <div key={b} onClick={() => selectBarrio(b)}
+                              style={{ padding: "10px 14px", cursor: "pointer", fontSize: 13, color: "#FFFFFF", borderBottom: `1px solid #2A2D3E` }}
+                              onMouseEnter={e => e.currentTarget.style.background = "#2A2D3E"}
+                              onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                            >{b}</div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Descuento */}
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ fontSize: 11, color: "#8A8FA8", marginBottom: 5, fontWeight: 500 }}>Descuento negociación (%)</div>
+                    <input type="number" value={negPct} onChange={e => setNegPct(Number(e.target.value) || 0)} placeholder="10"
+                      style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: "#1C1F2E", border: `1.5px solid #2A2D3E`, borderRadius: 8, color: "#FFFFFF", fontSize: 17, fontWeight: 700, fontFamily: "monospace", outline: "none" }} />
+                  </div>
+
+                  {/* Tipo refacción */}
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ fontSize: 11, color: "#8A8FA8", marginBottom: 8, fontWeight: 500 }}>Tipo de refacción</div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
+                      {Object.entries(refRates).map(([k, v]) => (
+                        <button key={k} onClick={() => setRefType(k)} style={{
+                          padding: "8px 4px", fontSize: 11, fontWeight: 700,
+                          background: refType === k ? "#F5A623" : "#1C1F2E",
+                          border: `1px solid ${refType === k ? "#F5A623" : "#2A2D3E"}`,
+                          borderRadius: 8, cursor: "pointer",
+                          color: refType === k ? "#000" : "#8A8FA8",
+                          textAlign: "center",
+                        }}>
+                          <div>{k.charAt(0).toUpperCase() + k.slice(1)}</div>
+                          <div style={{ fontSize: 9, marginTop: 2, opacity: 0.8 }}>${fmt(v)}/m²</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Comparables del barrio */}
+                  {barrio && (
+                    <div style={{ background: "#1C1F2E", borderRadius: 10, padding: "12px 14px", marginTop: 8 }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: "#8A8FA8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>Comparables · {barrio}</div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                        {[
+                          { label: "A reciclar", val: BARRIOS[barrio].sin_ref, color: "#8A8FA8" },
+                          { label: "Reciclado", val: BARRIOS[barrio].reciclado, color: "#F5A623" },
+                          { label: "Nuevo", val: BARRIOS[barrio].nuevo, color: "#34C759" },
+                        ].map(({ label, val, color }) => (
+                          <div key={label} style={{ textAlign: "center" }}>
+                            <div style={{ fontSize: 9, color: "#8A8FA8", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 4 }}>{label}</div>
+                            <div style={{ fontSize: 13, fontWeight: 700, color, fontFamily: "monospace" }}>{fmtUSD(val)}</div>
+                            <div style={{ fontSize: 9, color: "#8A8FA8" }}>/m²</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* RIGHT — Resultados */}
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#8A8FA8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 16 }}>Resultado</div>
+
+                  {/* Precio de compra */}
+                  <div style={{ background: "#1C1F2E", borderRadius: 12, padding: "16px", marginBottom: 12, border: `1px solid #2A2D3E` }}>
+                    <div style={{ fontSize: 10, color: "#8A8FA8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Precio de compra</div>
+                    <div style={{ fontSize: 30, fontWeight: 800, color: "#3A8EF6", fontFamily: "monospace" }}>{fmtUSD(Math.round(c.buyPrice))}</div>
+                    {m2 > 0 && <div style={{ fontSize: 11, color: "#8A8FA8", marginTop: 4 }}>{fmtUSD(Math.round(c.buyPrice / m2))}/m²</div>}
+                    {c.pctDelARV != null && (
+                      <div style={{ display: "inline-block", marginTop: 8, padding: "3px 10px", borderRadius: 6, background: c.pctDelARV <= 70 ? "#0D2B1D" : c.pctDelARV <= 85 ? "#2B1A0D" : "#2B0D0D", border: `1px solid ${c.pctDelARV <= 70 ? "#34C759" : c.pctDelARV <= 85 ? "#F5A623" : "#FF3B30"}` }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: c.pctDelARV <= 70 ? "#34C759" : c.pctDelARV <= 85 ? "#F5A623" : "#FF3B30" }}>{c.pctDelARV?.toFixed(0)}% del ARV</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ARV */}
+                  {barrio && m2 > 0 && (
+                    <div style={{ background: "#1C1F2E", borderRadius: 12, padding: "16px", marginBottom: 12, border: `1px solid #34C759` }}>
+                      <div style={{ fontSize: 10, color: "#34C759", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>ARV estimado · {barrio}</div>
+                      <div style={{ fontSize: 30, fontWeight: 800, color: "#34C759", fontFamily: "monospace" }}>{fmtUSD(Math.round(c.arv || 0))}</div>
+                      <div style={{ fontSize: 11, color: "#8A8FA8", marginTop: 4 }}>{fmt(c.arvM2)} USD/m²</div>
+                    </div>
+                  )}
+
+                  {/* Precios por m2 */}
+                  {m2 > 0 && barrio && (
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
+                      {[
+                        { label: "Compra/m²", val: fmtUSD(Math.round(c.buyPrice / m2)), color: "#3A8EF6" },
+                        { label: "Invertido/m²", val: fmtUSD(Math.round(c.totalCost / m2)), color: "#F5A623" },
+                        { label: "Venta/m²", val: fmtUSD(c.arvM2), color: "#34C759" },
+                      ].map(({ label, val, color }) => (
+                        <div key={label} style={{ background: "#1C1F2E", borderRadius: 8, padding: "10px 10px", textAlign: "center" }}>
+                          <div style={{ fontSize: 9, color: "#8A8FA8", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 4 }}>{label}</div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color, fontFamily: "monospace" }}>{val}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Ganancia y ROI */}
+                  {barrio && (
+                    <>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
+                        <div style={{ background: "#1C1F2E", borderRadius: 10, padding: "12px 14px" }}>
+                          <div style={{ fontSize: 9, color: "#8A8FA8", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 4 }}>Ganancia bruta</div>
+                          <div style={{ fontSize: 18, fontWeight: 700, color: c.profitFinal > 0 ? "#34C759" : "#FF3B30", fontFamily: "monospace" }}>{fmtUSD(Math.round(c.profitFinal || 0))}</div>
+                        </div>
+                        <div style={{ background: "#1C1F2E", borderRadius: 10, padding: "12px 14px" }}>
+                          <div style={{ fontSize: 9, color: "#8A8FA8", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 4 }}>ROI total</div>
+                          <div style={{ fontSize: 18, fontWeight: 700, color: c.roiNeto > c.roiMinimoExigido ? "#34C759" : "#FF3B30", fontFamily: "monospace" }}>{c.roiNeto?.toFixed(1)}%</div>
+                          <div style={{ fontSize: 9, color: "#8A8FA8", marginTop: 2 }}>mín. {c.roiMinimoExigido?.toFixed(1)}%</div>
+                        </div>
+                      </div>
+
+                      {/* Veredicto */}
+                      <div style={{ background: c.viableNeto ? "#0D2B1D" : "#2B0D0D", border: `1.5px solid ${c.viableNeto ? "#34C759" : "#FF3B30"}`, borderRadius: 12, padding: "14px 16px", marginBottom: 16, textAlign: "center" }}>
+                        <div style={{ fontSize: 16, fontWeight: 800, color: c.viableNeto ? "#34C759" : "#FF3B30", letterSpacing: "0.04em" }}>
+                          {c.viableNeto ? "✓ ENTRA" : "✕ NO ENTRA"}
+                        </div>
+                        <div style={{ fontSize: 11, color: "#8A8FA8", marginTop: 6 }}>
+                          {c.viableNeto
+                            ? `ROI ${c.roiNeto?.toFixed(1)}% ≥ mínimo ${c.roiMinimoExigido?.toFixed(1)}%`
+                            : `ROI ${c.roiNeto?.toFixed(1)}% < mínimo ${c.roiMinimoExigido?.toFixed(1)}%`
+                          }
+                        </div>
+                      </div>
+
+                      {/* Botón guardar */}
+                      <button onClick={() => setShowSaveModal(true)} style={{
+                        width: "100%", padding: "12px", background: "#F5A623", border: "none", borderRadius: 10,
+                        cursor: "pointer", color: "#000", fontWeight: 800, fontSize: 13,
+                        fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif", letterSpacing: "0.04em",
+                      }}>
+                        + Guardar en Watchlist
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===== MAO ===== */}
+        {tab === "mao" && (
+          <div style={{ paddingTop: 20, paddingBottom: 40 }}>
 
               {/* Modo selector */}
               <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
