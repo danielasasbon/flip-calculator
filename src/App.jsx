@@ -460,7 +460,10 @@ export default function FlipCalc() {
 
       <style>{`
   * { -webkit-font-smoothing: antialiased; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif; background: #0F1117; }
+  input[type=number]::-webkit-outer-spin-button,
+  input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type=number] { -moz-appearance: textfield; }
 `}</style>
 
       {/* Top bar */}
@@ -478,7 +481,7 @@ export default function FlipCalc() {
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: 0, marginTop: 0, borderBottom: `1px solid ${C.border}` }}>
-          {[["calc", "En el sitio"], ["mao", "Análisis completo"], ["watchlist", `Watchlist${watchlist.length > 0 ? ` (${watchlist.length})` : ""}`]].map(([key, label]) => (
+          {[["mao", "En el sitio"], ["calc", "Análisis completo"], ["watchlist", `Watchlist${watchlist.length > 0 ? ` (${watchlist.length})` : ""}`]].map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)} style={{
               padding: "12px 16px 11px", fontSize: 13, fontWeight: tab === key ? 700 : 400,
               background: "transparent", border: "none",
@@ -506,8 +509,8 @@ export default function FlipCalc() {
                   <div style={{ fontSize: 12, fontWeight: 700, color: "#8A8FA8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 16 }}>Datos de la propiedad</div>
 
                   {[
-                    { label: "Precio publicación (USD)", val: listPrice, set: v => setListPrice(Number(v) || 0), placeholder: "ej: 90000" },
-                    { label: "Superficie (m²)", val: m2, set: v => setM2(Number(v) || 0), placeholder: "ej: 45" },
+                    { label: "Precio publicación (USD)", val: listPrice || "", set: v => setListPrice(Number(v) || 0), placeholder: "ej: 90000" },
+                    { label: "Superficie (m²)", val: m2 || "", set: v => setM2(Number(v) || 0), placeholder: "ej: 45" },
                   ].map(({ label, val, set, placeholder }) => (
                     <div key={label} style={{ marginBottom: 12 }}>
                       <div style={{ fontSize: 11, color: "#8A8FA8", marginBottom: 5, fontWeight: 500 }}>{label}</div>
