@@ -9,12 +9,10 @@ const supabase = createClient(
 
 const fmt = (n) => new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 }).format(n);
 const fmtUSD = (n) => "USD " + fmt(n);
-const refRates = { estetica: 300, media: 500, integral: 850 };
 
 
-const STORAGE_KEY = "flip-watchlist-v1";
 
-const C = {
+var C = {
   bg:          "#0F1117",
   panel:       "#1C1F2E",
   panelAlt:    "#161924",
@@ -95,6 +93,9 @@ const SectionHeader = ({ title, sub, mt = 28 }) => (
 );
 
 export default function FlipCalc() {
+
+  const refRates = { estetica: 300, media: 500, integral: 850 };
+  const STORAGE_KEY = "flip-watchlist-v1";
 
 const BARRIOS = {
   // Precios actualizados jun-2026. Fuentes: Mudafy ene-2026, Ambito dic-2025, Zonaprop feb-2026, RE/MAX
