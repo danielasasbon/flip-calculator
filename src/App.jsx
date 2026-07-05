@@ -123,6 +123,7 @@ const BARRIOS = {
   "Boedo":             { sin_ref: 1400, reciclado: 2050, nuevo: 2700, pozo: 2200, tendencia: "sube", demanda: "media", nota: "Revalorización gradual. Stock antiguo con buen potencial de reciclado." },
   "Paternal":          { sin_ref: 1250, reciclado: 1850, nuevo: 2500, pozo: 2000, tendencia: "estable", demanda: "baja",  nota: "Mercado lento. Solo viable con precios muy por debajo del mercado." },
 };
+
   const [loggedIn, setLoggedIn] = useState(() => !!sessionStorage.getItem("flippar_user"));
   const [loginUser, setLoginUser] = useState("");
   const [loginPass, setLoginPass] = useState("");
