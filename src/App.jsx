@@ -129,6 +129,8 @@ export default function FlipCalc() {
   const [tab, setTab] = useState("calc");
   // MAO tab state
   const [maoArv, setMaoArv] = useState("");
+  const [maoDireccion, setMaoDireccion] = useState("");
+  const [maoPrecioVentaM2, setMaoPrecioVentaM2] = useState("");
   const [maoM2, setMaoM2] = useState("");
   const [maoCostoPorM2, setMaoCostoPorM2] = useState(500);
   const [maoGastosCompra, setMaoGastosCompra] = useState(6);
@@ -687,10 +689,9 @@ export default function FlipCalc() {
                 {/* Dirección */}
                 <div style={{ marginBottom: 12 }}>
                   <div style={{ fontSize: 11, color: "#8A8FA8", marginBottom: 5 }}>Dirección / calle</div>
-                  <input type="text" value={maoArv === "" ? "" : undefined} onChange={() => {}}
+                  <input type="text" value={maoDireccion} onChange={e => setMaoDireccion(e.target.value)}
                     placeholder="ej: Charcas 4091"
-                    id="mao-direccion"
-                    style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: "#1C1F2E", border: "1.5px solid #2A2D3E", borderRadius: 8, color: "#FFFFFF", fontSize: 14, outline: "none" }} />
+                    style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: "#1C1F2E", border: `1.5px solid ${maoDireccion ? "#3A8EF6" : "#2A2D3E"}`, borderRadius: 8, color: "#FFFFFF", fontSize: 14, outline: "none" }} />
                 </div>
 
                 {/* Precio publicado */}
@@ -778,8 +779,8 @@ export default function FlipCalc() {
                 {/* Precio x m2 de venta */}
                 <div style={{ marginBottom: 12 }}>
                   <div style={{ fontSize: 11, color: "#8A8FA8", marginBottom: 5 }}>Precio x m² de venta (USD) — relevado en zona</div>
-                  <input type="number" value={maoCostoPorM2} onChange={e => setMaoCostoPorM2(Number(e.target.value) || 0)} placeholder="ej: 2900"
-                    style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: "#1C1F2E", border: `1.5px solid ${maoCostoPorM2 ? "#F5A623" : "#2A2D3E"}`, borderRadius: 8, color: "#FFFFFF", fontSize: 17, fontWeight: 700, fontFamily: "monospace", outline: "none" }} />
+                  <input type="number" value={maoPrecioVentaM2} onChange={e => setMaoPrecioVentaM2(e.target.value)} placeholder="ej: 2900"
+                    style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: "#1C1F2E", border: `1.5px solid ${maoPrecioVentaM2 ? "#F5A623" : "#2A2D3E"}`, borderRadius: 8, color: "#FFFFFF", fontSize: 17, fontWeight: 700, fontFamily: "monospace", outline: "none" }} />
                   {barrio && <div style={{ fontSize: 10, color: "#8A8FA8", marginTop: 4 }}>Ref zona: reciclado {fmtUSD(BARRIOS[barrio]?.reciclado || 0)}/m²</div>}
                 </div>
 
@@ -797,7 +798,7 @@ export default function FlipCalc() {
                 <div style={{ fontSize: 12, fontWeight: 700, color: "#8A8FA8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 16 }}>Resultado</div>
 
                 {(() => {
-                  const arvSitio = maoCostoPorM2 && maoM2 ? maoCostoPorM2 * Number(maoM2) : 0;
+                  const arvSitio = maoPrecioVentaM2 && maoM2 ? Number(maoPrecioVentaM2) * Number(maoM2) : 0;
                   const capexSitio = refRates[refType] * Number(maoM2 || 0);
                   const precioPublicado = Number(maoArv) || 0;
                   const gastosCompra = arvSitio * maoGastosCompra / 100;
@@ -806,7 +807,7 @@ export default function FlipCalc() {
                   const rentabilidad = arvSitio * (maoRentabilidadAnual / 100) * (maoDuracion / 12);
                   const maoSitio = arvSitio - capexSitio - gastosCompra - opexTotal - gastosVenta - rentabilidad;
                   const pxm2Compra = maoSitio && maoM2 ? Math.round(maoSitio / Number(maoM2)) : 0;
-                  const pxm2Venta = Number(maoCostoPorM2) || 0;
+                  const pxm2Venta = Number(maoPrecioVentaM2) || 0;
 
                   return arvSitio > 0 ? (
                     <>
