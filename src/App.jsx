@@ -131,18 +131,8 @@ const BARRIOS = {
   const [loginError, setLoginError] = useState("");
   const [currentUser, setCurrentUser] = useState(() => sessionStorage.getItem("flippar_user") || "");
   const [tab, setTab] = useState("calc");
-  // MAO tab state
-  const [maoArv, setMaoArv] = useState("");
-  const [maoDireccion, setMaoDireccion] = useState("");
-  const [maoPrecioVentaM2, setMaoPrecioVentaM2] = useState("");
-  const [maoM2, setMaoM2] = useState("");
-  const [maoCostoPorM2, setMaoCostoPorM2] = useState(500);
-  const [maoGastosCompra, setMaoGastosCompra] = useState(6);
-  const [maoGastosTenenciaMes, setMaoGastosTenenciaMes] = useState(200);
-  const [maoDuracion, setMaoDuracion] = useState(8);
-  const [maoCostosVenta, setMaoCostosVenta] = useState(5);
-  const [maoRentabilidadAnual, setMaoRentabilidadAnual] = useState(40);
-  const [maoModo, setMaoModo] = useState("mao"); // "mao" o "arv"
+  const [direccion, setDireccion] = useState("");
+  const [rentabilidadObjetivo, setRentabilidadObjetivo] = useState(30);
   const modo = "avanzado";
   const [listPrice, setListPrice] = useState(120000);
   const [m2, setM2] = useState(55);
@@ -240,14 +230,21 @@ const BARRIOS = {
     const profitNeto = profitFinal !== null ? profitFinal - expensasTotal : null;
     const roiNeto = profitNeto !== null ? (profitNeto / totalCost) * 100 : null;
     const roiNetoAnual = roiNeto !== null ? (roiNeto / sellMonths) * 12 : null;
-    const roiMinimoExigido = (sellMonths / 6) * 10;
+    const roiMinimoExigido = rentabilidadObjetivo * (sellMonths / 12);
     const viableNeto = profitNeto > 0 && roiNeto > roiMinimoExigido;
     // Alquiler
     const alquilerMensual = alquilerM2 > 0 ? alquilerM2 * m2 : null;
     const alquilerAnual = alquilerMensual ? alquilerMensual * 12 : null;
     const alquilerROI = alquilerAnual ? (alquilerAnual / totalCost) * 100 : null;
-    return { buyPrice, refCost, closing, comisionCompra, escribanoCompra, totalCost, arv, arvM2, pctDelARV, nuevoTotal, sellComm, escribanoCost, netSale, profit, roi, roiAnual, viable, discVsNuevo, usandoCustom, expensasTotal, profitNeto, roiNeto, roiNetoAnual, viableNeto, roiMinimoExigido, alquilerMensual, alquilerAnual, alquilerROI, ventaFinal, sellCommFinal, escribanoCostFinal, netSaleFinal, profitFinal, gananciaConMuebles, airbnbIngresoMensual, airbnbIngresoAnualBruto, airbnbGastosAnuales, airbnbIngresoAnualNeto };
-  }, [listPrice, m2, negPct, refType, refExtra, closingPct, comisionCompraPct, escribanoCompraPct, sellCommPct, escribanoPct, sellMonths, barrio, customUsadoM2, customNuevoM2, expensas, expensasMoneda, blueRate, alquilerM2, precioVentaCierre, valorMuebles, airbnbPrecioNoche, airbnbDiasMes, airbnbGastosMensuales]);
+    // MAO — Máximo a Ofrecer (metodología ARV-first del curso, mismos inputs que el resto del análisis)
+    const gastosCompraMao = arv ? arv * (comisionCompraPct + escribanoCompraPct) / 100 : null;
+    const gastosVentaMao  = arv ? sellComm + escribanoCost : null;
+    const rentabilidadNecesaria = arv ? arv * (rentabilidadObjetivo / 100) * (sellMonths / 12) : null;
+    const mao = arv ? arv - refCost - gastosCompraMao - expensasTotal - gastosVentaMao - rentabilidadNecesaria : null;
+    const pctMaoDelArv = mao && arv ? (mao / arv) * 100 : null;
+    const margenNegociacion = mao !== null ? listPrice - mao : null;
+    return { buyPrice, refCost, closing, comisionCompra, escribanoCompra, totalCost, arv, arvM2, pctDelARV, nuevoTotal, sellComm, escribanoCost, netSale, profit, roi, roiAnual, viable, discVsNuevo, usandoCustom, expensasTotal, profitNeto, roiNeto, roiNetoAnual, viableNeto, roiMinimoExigido, alquilerMensual, alquilerAnual, alquilerROI, ventaFinal, sellCommFinal, escribanoCostFinal, netSaleFinal, profitFinal, gananciaConMuebles, airbnbIngresoMensual, airbnbIngresoAnualBruto, airbnbGastosAnuales, airbnbIngresoAnualNeto, gastosCompraMao, gastosVentaMao, rentabilidadNecesaria, mao, pctMaoDelArv, margenNegociacion };
+  }, [listPrice, m2, negPct, refType, refExtra, closingPct, comisionCompraPct, escribanoCompraPct, sellCommPct, escribanoPct, sellMonths, barrio, customUsadoM2, customNuevoM2, expensas, expensasMoneda, blueRate, alquilerM2, precioVentaCierre, valorMuebles, airbnbPrecioNoche, airbnbDiasMes, airbnbGastosMensuales, rentabilidadObjetivo]);
 
   const filtered = Object.keys(BARRIOS).filter(b =>
     barrioInput.length > 0 && b.toLowerCase().includes(barrioInput.toLowerCase())
@@ -321,22 +318,6 @@ const BARRIOS = {
 
   const now = new Date().toLocaleString("es-AR", { day:"2-digit", month:"2-digit", year:"2-digit", hour:"2-digit", minute:"2-digit" });
 
-  // MAO calculation
-  const maoCalc = useMemo(() => {
-    const arv = Number(maoArv) || 0;
-    const m2 = Number(maoM2) || 0;
-    const capex = m2 * maoCostoPorM2;
-    const gastosCompra = arv * maoGastosCompra / 100;
-    const opex = maoGastosTenenciaMes * maoDuracion;
-    const gastosVenta = arv * maoCostosVenta / 100;
-    const rentabilidadNecesaria = arv * (maoRentabilidadAnual / 100) * (maoDuracion / 12);
-    const mao = arv - capex - gastosCompra - opex - gastosVenta - rentabilidadNecesaria;
-    const pctDelArv = arv ? (mao / arv) * 100 : 0;
-    // ARV objetivo (modo inverso)
-    const arvObjetivo = maoArv ? 0 : 0; // se calcula si el usuario pone MAO y quiere saber ARV
-    return { arv, m2, capex, gastosCompra, opex, gastosVenta, rentabilidadNecesaria, mao, pctDelArv };
-  }, [maoArv, maoM2, maoCostoPorM2, maoGastosCompra, maoGastosTenenciaMes, maoDuracion, maoCostosVenta, maoRentabilidadAnual]);
-
   const exportToExcel = () => {
     const wb = XLSX.utils.book_new();
     const rows = [];
@@ -357,13 +338,13 @@ const BARRIOS = {
     rows.push([]);
 
     // SECCIÓN 2: MAO
-    if (maoCalc.arv > 0) {
+    if (c.arv > 0) {
       rows.push(["CALCULADORA MAO", "", "", ""]);
-      rows.push(["ARV", maoCalc.arv, "CAPEX", maoCalc.capex]);
-      rows.push([`Gastos compra (${maoGastosCompra}%)`, Math.round(maoCalc.gastosCompra), `OPEX (${maoDuracion} meses)`, maoCalc.opex]);
-      rows.push([`Gastos venta (${maoCostosVenta}%)`, Math.round(maoCalc.gastosVenta), `Rentabilidad (${maoRentabilidadAnual}% anual)`, Math.round(maoCalc.rentabilidadNecesaria)]);
-      rows.push(["MAO (Máximo a Ofrecer)", Math.round(maoCalc.mao), "MAO % del ARV", `${maoCalc.pctDelArv.toFixed(0)}%`]);
-      rows.push(["Regla 70%", maoCalc.pctDelArv <= 70 ? "✓ Cumple" : "⚠ No cumple", "", ""]);
+      rows.push(["ARV", Math.round(c.arv), "CAPEX", Math.round(c.refCost)]);
+      rows.push([`Gastos compra (${comisionCompraPct + escribanoCompraPct}%)`, Math.round(c.gastosCompraMao || 0), `OPEX (expensas × ${sellMonths} meses)`, Math.round(c.expensasTotal || 0)]);
+      rows.push(["Gastos venta", Math.round(c.gastosVentaMao || 0), `Rentabilidad (${rentabilidadObjetivo}% anual)`, Math.round(c.rentabilidadNecesaria || 0)]);
+      rows.push(["MAO (Máximo a Ofrecer)", Math.round(c.mao || 0), "MAO % del ARV", `${c.pctMaoDelArv?.toFixed(0)}%`]);
+      rows.push(["Regla 70%", (c.pctMaoDelArv || 0) <= 70 ? "✓ Cumple" : "⚠ No cumple", "", ""]);
       rows.push([]);
     }
 
@@ -486,7 +467,7 @@ const BARRIOS = {
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: 0, marginTop: 0, borderBottom: `1px solid ${C.border}` }}>
-          {[["mao", "En el sitio"], ["calc", "Análisis completo"], ["watchlist", `Watchlist${watchlist.length > 0 ? ` (${watchlist.length})` : ""}`]].map(([key, label]) => (
+          {[["calc", "Análisis"], ["watchlist", `Watchlist${watchlist.length > 0 ? ` (${watchlist.length})` : ""}`]].map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)} style={{
               padding: "12px 16px 11px", fontSize: 13, fontWeight: tab === key ? 700 : 400,
               background: "transparent", border: "none",
@@ -502,202 +483,6 @@ const BARRIOS = {
       <div style={{ padding: "0 20px", maxWidth: 520, margin: "0 auto" }}>
 
         {/* ===== CALC ===== */}
-        {tab === "mao" && (
-          <div style={{ paddingTop: 20, paddingBottom: 40 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-
-              {/* LEFT — Inputs */}
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: "#8A8FA8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 16 }}>Datos de la propiedad</div>
-
-                {/* Dirección */}
-                <div style={{ marginBottom: 12 }}>
-                  <div style={{ fontSize: 11, color: "#8A8FA8", marginBottom: 5 }}>Dirección / calle</div>
-                  <input type="text" value={maoDireccion} onChange={e => setMaoDireccion(e.target.value)}
-                    placeholder="ej: Charcas 4091"
-                    style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: "#1C1F2E", border: `1.5px solid ${maoDireccion ? "#3A8EF6" : "#2A2D3E"}`, borderRadius: 8, color: "#FFFFFF", fontSize: 14, outline: "none" }} />
-                </div>
-
-                {/* Precio publicado */}
-                <div style={{ marginBottom: 12 }}>
-                  <div style={{ fontSize: 11, color: "#8A8FA8", marginBottom: 5 }}>Precio publicado (USD)</div>
-                  <input type="number" value={maoArv} onChange={e => setMaoArv(e.target.value)} placeholder="ej: 90000"
-                    style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: "#1C1F2E", border: `1.5px solid ${maoArv ? "#3A8EF6" : "#2A2D3E"}`, borderRadius: 8, color: "#FFFFFF", fontSize: 17, fontWeight: 700, fontFamily: "monospace", outline: "none" }} />
-                </div>
-
-                {/* m2 y Barrio */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
-                  <div>
-                    <div style={{ fontSize: 11, color: "#8A8FA8", marginBottom: 5 }}>Superficie (m²)</div>
-                    <input type="number" value={maoM2} onChange={e => setMaoM2(e.target.value)} placeholder="ej: 45"
-                      style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: "#1C1F2E", border: `1.5px solid ${maoM2 ? "#3A8EF6" : "#2A2D3E"}`, borderRadius: 8, color: "#FFFFFF", fontSize: 17, fontWeight: 700, fontFamily: "monospace", outline: "none" }} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 11, color: "#8A8FA8", marginBottom: 5 }}>Barrio</div>
-                    <div style={{ position: "relative" }}>
-                      <input type="text" placeholder="Buscar..." value={barrioInput}
-                        onChange={(e) => { setBarrioInput(e.target.value); setShowSug(true); if (!e.target.value) setBarrio(null); }}
-                        onFocus={() => setShowSug(true)}
-                        style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: "#1C1F2E", border: `1.5px solid ${barrio ? "#34C759" : "#2A2D3E"}`, borderRadius: 8, color: "#FFFFFF", fontSize: 13, outline: "none" }} />
-                      {barrio && <span style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", fontSize: 10, color: "#34C759", fontWeight: 700 }}>✓</span>}
-                      {showSug && filtered.length > 0 && (
-                        <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 10, background: "#1C1F2E", border: "1px solid #2A2D3E", borderRadius: 8, marginTop: 2, maxHeight: 180, overflowY: "auto" }}>
-                          {filtered.map(b => (
-                            <div key={b} onClick={() => selectBarrio(b)}
-                              style={{ padding: "9px 12px", cursor: "pointer", fontSize: 13, color: "#FFFFFF", borderBottom: "1px solid #2A2D3E" }}
-                              onMouseEnter={e => e.currentTarget.style.background = "#2A2D3E"}
-                              onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                            >{b}</div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Tipo refacción */}
-                <div style={{ marginBottom: 12 }}>
-                  <div style={{ fontSize: 11, color: "#8A8FA8", marginBottom: 8 }}>Tipo de refacción</div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
-                    {Object.entries(refRates).map(([k, v]) => (
-                      <button key={k} onClick={() => setRefType(k)} style={{
-                        padding: "8px 4px", fontSize: 11, fontWeight: 700,
-                        background: refType === k ? "#F5A623" : "#1C1F2E",
-                        border: `1px solid ${refType === k ? "#F5A623" : "#2A2D3E"}`,
-                        borderRadius: 8, cursor: "pointer",
-                        color: refType === k ? "#000" : "#8A8FA8",
-                      }}>
-                        <div>{k.charAt(0).toUpperCase() + k.slice(1)}</div>
-                        <div style={{ fontSize: 9, marginTop: 2, opacity: 0.8 }}>${fmt(v)}/m²</div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Gastos y operación */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
-                  <div>
-                    <div style={{ fontSize: 11, color: "#8A8FA8", marginBottom: 5 }}>Gastos compra (%)</div>
-                    <input type="number" value={maoGastosCompra} onChange={e => setMaoGastosCompra(Number(e.target.value) || 0)} placeholder="6"
-                      style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: "#1C1F2E", border: "1.5px solid #2A2D3E", borderRadius: 8, color: "#FFFFFF", fontSize: 15, fontWeight: 700, fontFamily: "monospace", outline: "none" }} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 11, color: "#8A8FA8", marginBottom: 5 }}>Gastos venta (%)</div>
-                    <input type="number" value={maoCostosVenta} onChange={e => setMaoCostosVenta(Number(e.target.value) || 0)} placeholder="5"
-                      style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: "#1C1F2E", border: "1.5px solid #2A2D3E", borderRadius: 8, color: "#FFFFFF", fontSize: 15, fontWeight: 700, fontFamily: "monospace", outline: "none" }} />
-                  </div>
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
-                  <div>
-                    <div style={{ fontSize: 11, color: "#8A8FA8", marginBottom: 5 }}>OPEX mensual (USD)</div>
-                    <input type="number" value={maoGastosTenenciaMes} onChange={e => setMaoGastosTenenciaMes(Number(e.target.value) || 0)} placeholder="200"
-                      style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: "#1C1F2E", border: "1.5px solid #2A2D3E", borderRadius: 8, color: "#FFFFFF", fontSize: 15, fontWeight: 700, fontFamily: "monospace", outline: "none" }} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 11, color: "#8A8FA8", marginBottom: 5 }}>Duración (meses)</div>
-                    <input type="number" value={maoDuracion} onChange={e => setMaoDuracion(Number(e.target.value) || 1)} placeholder="8"
-                      style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: "#1C1F2E", border: "1.5px solid #2A2D3E", borderRadius: 8, color: "#FFFFFF", fontSize: 15, fontWeight: 700, fontFamily: "monospace", outline: "none" }} />
-                  </div>
-                </div>
-
-                {/* Precio x m2 de venta */}
-                <div style={{ marginBottom: 12 }}>
-                  <div style={{ fontSize: 11, color: "#8A8FA8", marginBottom: 5 }}>Precio x m² de venta (USD) — relevado en zona</div>
-                  <input type="number" value={maoPrecioVentaM2} onChange={e => setMaoPrecioVentaM2(e.target.value)} placeholder="ej: 2900"
-                    style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: "#1C1F2E", border: `1.5px solid ${maoPrecioVentaM2 ? "#F5A623" : "#2A2D3E"}`, borderRadius: 8, color: "#FFFFFF", fontSize: 17, fontWeight: 700, fontFamily: "monospace", outline: "none" }} />
-                  {barrio && <div style={{ fontSize: 10, color: "#8A8FA8", marginTop: 4 }}>Ref zona: reciclado {fmtUSD(BARRIOS[barrio]?.reciclado || 0)}/m²</div>}
-                </div>
-
-                {/* Rentabilidad */}
-                <div style={{ marginBottom: 4 }}>
-                  <div style={{ fontSize: 11, color: "#8A8FA8", marginBottom: 5 }}>Rentabilidad anual objetivo (%)</div>
-                  <input type="number" value={maoRentabilidadAnual} onChange={e => setMaoRentabilidadAnual(Number(e.target.value) || 0)} placeholder="40"
-                    style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: "#1C1F2E", border: "1.5px solid #2A2D3E", borderRadius: 8, color: "#FFFFFF", fontSize: 15, fontWeight: 700, fontFamily: "monospace", outline: "none" }} />
-                  <div style={{ fontSize: 10, color: "#8A8FA8", marginTop: 4, borderLeft: "2px solid #F5A623", paddingLeft: 8 }}>Flipping Master: 40% anual (20% inversor + 20% operador)</div>
-                </div>
-              </div>
-
-              {/* RIGHT — Resultados */}
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: "#8A8FA8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 16 }}>Resultado</div>
-
-                {(() => {
-                  const arvSitio = maoPrecioVentaM2 && maoM2 ? Number(maoPrecioVentaM2) * Number(maoM2) : 0;
-                  const capexSitio = refRates[refType] * Number(maoM2 || 0);
-                  const precioPublicado = Number(maoArv) || 0;
-                  const ofertaSugerida = precioPublicado * (1 - maoGastosCompra / 100 * 0); // precio publicado como referencia
-                  const gastosCompra = arvSitio * maoGastosCompra / 100;
-                  const gastosVenta = arvSitio * maoCostosVenta / 100;
-                  const opexTotal = maoGastosTenenciaMes * maoDuracion;
-                  const rentabilidad = arvSitio * (maoRentabilidadAnual / 100) * (maoDuracion / 12);
-                  const maoSitio = arvSitio - capexSitio - gastosCompra - opexTotal - gastosVenta - rentabilidad;
-                  const margenNegociacion = maoSitio > 0 ? precioPublicado - maoSitio : 0;
-                  const pxm2Compra = maoSitio && maoM2 ? Math.round(maoSitio / Number(maoM2)) : 0;
-                  const pxm2Venta = Number(maoPrecioVentaM2) || 0;
-
-                  return arvSitio > 0 ? (
-                    <>
-                      {/* ARV */}
-                      <div style={{ background: "#1C1F2E", borderRadius: 12, padding: "14px 16px", marginBottom: 10, border: "1px solid #34C759" }}>
-                        <div style={{ fontSize: 10, color: "#34C759", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>ARV estimado</div>
-                        <div style={{ fontSize: 28, fontWeight: 800, color: "#34C759", fontFamily: "monospace" }}>{fmtUSD(Math.round(arvSitio))}</div>
-                        <div style={{ fontSize: 11, color: "#8A8FA8", marginTop: 2 }}>{fmtUSD(pxm2Venta)}/m² × {maoM2} m²</div>
-                      </div>
-
-                      {/* CAPEX */}
-                      <div style={{ background: "#1C1F2E", borderRadius: 10, padding: "12px 14px", marginBottom: 10, border: "1px solid #2A2D3E" }}>
-                        <div style={{ fontSize: 10, color: "#8A8FA8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>CAPEX (refacción)</div>
-                        <div style={{ fontSize: 20, fontWeight: 700, color: "#FF6B6B", fontFamily: "monospace" }}>−{fmtUSD(capexSitio)}</div>
-                        <div style={{ fontSize: 10, color: "#8A8FA8", marginTop: 2 }}>${fmt(refRates[refType])}/m² × {maoM2} m²</div>
-                      </div>
-
-                      {/* MAO */}
-                      <div style={{ background: maoSitio > 0 ? "#1C1F2E" : "#2B0D0D", borderRadius: 14, padding: "18px 16px", marginBottom: 10, border: `2px solid ${maoSitio > 0 ? "#F5A623" : "#FF3B30"}`, textAlign: "center" }}>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: "#8A8FA8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>MAO — Máximo a Ofrecer</div>
-                        <div style={{ fontSize: 34, fontWeight: 800, color: maoSitio > 0 ? "#F5A623" : "#FF3B30", fontFamily: "monospace" }}>
-                          {maoSitio > 0 ? fmtUSD(Math.round(maoSitio)) : "—"}
-                        </div>
-                        {maoSitio > 0 && Number(maoM2) > 0 && (
-                          <div style={{ display: "flex", justifyContent: "center", gap: 20, marginTop: 12, paddingTop: 10, borderTop: "1px solid #2A2D3E" }}>
-                            <div style={{ textAlign: "center" }}>
-                              <div style={{ fontSize: 9, color: "#8A8FA8", textTransform: "uppercase", marginBottom: 2 }}>MAO / m²</div>
-                              <div style={{ fontSize: 14, fontWeight: 700, color: "#F5A623", fontFamily: "monospace" }}>{fmtUSD(pxm2Compra)}</div>
-                            </div>
-                            <div style={{ width: 1, background: "#2A2D3E" }} />
-                            <div style={{ textAlign: "center" }}>
-                              <div style={{ fontSize: 9, color: "#8A8FA8", textTransform: "uppercase", marginBottom: 2 }}>ARV / m²</div>
-                              <div style={{ fontSize: 14, fontWeight: 700, color: "#34C759", fontFamily: "monospace" }}>{fmtUSD(pxm2Venta)}</div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Veredicto */}
-                      {precioPublicado > 0 && maoSitio > 0 && (
-                        <div style={{ background: "#1C1F2E", border: `1.5px solid #F5A623`, borderRadius: 12, padding: "14px 16px", textAlign: "center" }}>
-                          <div style={{ fontSize: 11, color: "#8A8FA8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Tu oferta máxima</div>
-                          <div style={{ fontSize: 26, fontWeight: 800, color: "#F5A623", fontFamily: "monospace", marginBottom: 6 }}>{fmtUSD(Math.round(maoSitio))}</div>
-                          {margenNegociacion > 0 && (
-                            <div style={{ fontSize: 12, color: "#8A8FA8", lineHeight: 1.5 }}>
-                              Publicado {fmtUSD(precioPublicado)} → necesitás negociar <span style={{ color: "#34C759", fontWeight: 700 }}>−{fmtUSD(Math.round(margenNegociacion))}</span>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <div style={{ background: "#1C1F2E", borderRadius: 14, padding: "40px 20px", textAlign: "center" }}>
-                      <div style={{ fontSize: 32, marginBottom: 12 }}>🏠</div>
-                      <div style={{ fontSize: 13, color: "#8A8FA8", lineHeight: 1.6 }}>Ingresá el precio x m² de venta y los m² para ver el resultado</div>
-                    </div>
-                  );
-                })()}
-              </div>
-            </div>
-          </div>
-        )}
-
-
         {tab === "calc" && (
           <div style={{ margin: "0 -20px" }}>
             <div style={{ background: "#0F1117", minHeight: "calc(100vh - 100px)", padding: "20px 20px 40px" }}>
@@ -709,6 +494,13 @@ const BARRIOS = {
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 700, color: "#8A8FA8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 16 }}>Datos de la propiedad</div>
 
+                  {/* Dirección (referencia) */}
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ fontSize: 11, color: "#8A8FA8", marginBottom: 5, fontWeight: 500 }}>Dirección / calle (opcional)</div>
+                    <input type="text" value={direccion} onChange={e => setDireccion(e.target.value)} placeholder="ej: Charcas 4091"
+                      style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: "#1C1F2E", border: `1.5px solid ${direccion ? "#3A8EF6" : "#2A2D3E"}`, borderRadius: 8, color: "#FFFFFF", fontSize: 14, outline: "none" }} />
+                  </div>
+
                   {[
                     { label: "Precio publicación (USD)", val: listPrice || "", set: v => setListPrice(Number(v) || 0), placeholder: "ej: 90000" },
                     { label: "Superficie (m²)", val: m2 || "", set: v => setM2(Number(v) || 0), placeholder: "ej: 45" },
@@ -719,6 +511,14 @@ const BARRIOS = {
                         style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: "#1C1F2E", border: `1.5px solid ${val ? "#3A8EF6" : "#2A2D3E"}`, borderRadius: 8, color: "#FFFFFF", fontSize: 17, fontWeight: 700, fontFamily: "monospace", outline: "none" }} />
                     </div>
                   ))}
+
+                  {/* Rentabilidad objetivo */}
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ fontSize: 11, color: "#8A8FA8", marginBottom: 5, fontWeight: 500 }}>Rentabilidad anual objetivo (%)</div>
+                    <input type="number" value={rentabilidadObjetivo} onChange={e => setRentabilidadObjetivo(Number(e.target.value) || 0)} placeholder="30"
+                      style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: "#1C1F2E", border: "1.5px solid #2A2D3E", borderRadius: 8, color: "#FFFFFF", fontSize: 17, fontWeight: 700, fontFamily: "monospace", outline: "none" }} />
+                    <div style={{ fontSize: 10, color: "#8A8FA8", marginTop: 4, borderLeft: "2px solid #F5A623", paddingLeft: 8 }}>Usado para el MAO y el veredicto de viabilidad</div>
+                  </div>
 
                   {/* Barrio */}
                   <div style={{ marginBottom: 12 }}>
@@ -846,6 +646,22 @@ const BARRIOS = {
                           <div style={{ fontSize: 9, color: "#8A8FA8", marginTop: 2 }}>mín. {c.roiMinimoExigido?.toFixed(1)}%</div>
                         </div>
                       </div>
+
+                      {/* MAO — Máximo a Ofrecer */}
+                      {c.mao != null && (
+                        <div style={{ background: c.mao > 0 ? "#1C1F2E" : "#2B0D0D", borderRadius: 14, padding: "16px", marginBottom: 12, border: `2px solid ${c.mao > 0 ? "#F5A623" : "#FF3B30"}`, textAlign: "center" }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: "#8A8FA8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>MAO — Máximo a Ofrecer</div>
+                          <div style={{ fontSize: 30, fontWeight: 800, color: c.mao > 0 ? "#F5A623" : "#FF3B30", fontFamily: "monospace" }}>
+                            {c.mao > 0 ? fmtUSD(Math.round(c.mao)) : "—"}
+                          </div>
+                          <div style={{ fontSize: 10, color: "#8A8FA8", marginTop: 4 }}>{c.pctMaoDelArv?.toFixed(0)}% del ARV · rentabilidad {rentabilidadObjetivo}% anual</div>
+                          {c.margenNegociacion > 0 && (
+                            <div style={{ fontSize: 12, color: "#8A8FA8", lineHeight: 1.5, marginTop: 8, paddingTop: 8, borderTop: "1px solid #2A2D3E" }}>
+                              Publicado {fmtUSD(listPrice)} → necesitás negociar <span style={{ color: "#34C759", fontWeight: 700 }}>−{fmtUSD(Math.round(c.margenNegociacion))}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                       {/* Veredicto */}
                       <div style={{ background: c.viableNeto ? "#0D2B1D" : "#2B0D0D", border: `1.5px solid ${c.viableNeto ? "#34C759" : "#FF3B30"}`, borderRadius: 12, padding: "14px 16px", marginBottom: 16, textAlign: "center" }}>
