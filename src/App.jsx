@@ -162,6 +162,7 @@ const BARRIOS = {
   const [customUsadoM2, setCustomUsadoM2] = useState("");
   const [customNuevoM2, setCustomNuevoM2] = useState("");
   const [watchlist, setWatchlist] = useState([]);
+  const [watchlistError, setWatchlistError] = useState(null);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [saveName, setSaveName] = useState("");
   const [saveLink, setSaveLink] = useState("");
@@ -175,17 +176,24 @@ const BARRIOS = {
         .select("*")
         .eq("usuario", currentUser)
         .order("roi_anual", { ascending: false });
-      if (!error && data) setWatchlist(data);
+      if (error) { setWatchlistError(error.message); return; }
+      setWatchlistError(null);
+      if (data) setWatchlist(data);
     };
     loadWatchlist();
   }, [currentUser]);
 
   const saveToStorage = async (entry) => {
-    await supabase.from("watchlist").insert([entry]);
+    const { error } = await supabase.from("watchlist").insert([entry]);
+    if (error) { setWatchlistError(error.message); return false; }
+    setWatchlistError(null);
+    return true;
   };
 
   const deleteFromStorage = async (id) => {
-    await supabase.from("watchlist").delete().eq("id", id);
+    const { error } = await supabase.from("watchlist").delete().eq("id", id);
+    if (error) { setWatchlistError(error.message); return false; }
+    return true;
   };
 
   const refLabels = { estetica: "Estética", media: "Media", integral: "Integral" };
@@ -271,12 +279,14 @@ const BARRIOS = {
       fecha: new Date().toLocaleDateString("es-AR"),
       datos: { buyPrice: Math.round(c.buyPrice), totalCost: Math.round(c.totalCost), negPct },
     };
-    await saveToStorage(entry);
-    const { data } = await supabase
+    const ok = await saveToStorage(entry);
+    if (!ok) return; // watchlistError ya quedó seteado, no cerramos el modal para que se vea
+    const { data, error } = await supabase
       .from("watchlist")
       .select("*")
       .eq("usuario", currentUser)
       .order("roi_anual", { ascending: false });
+    if (error) { setWatchlistError(error.message); return; }
     if (data) setWatchlist(data);
     setShowSaveModal(false);
     setSaveName(""); setSaveLink(""); setSaveNotas("");
@@ -284,7 +294,8 @@ const BARRIOS = {
   };
 
   const handleDelete = async (id) => {
-    await deleteFromStorage(id);
+    const ok = await deleteFromStorage(id);
+    if (!ok) return;
     setWatchlist(prev => prev.filter(w => w.id !== id));
   };
 
@@ -737,6 +748,12 @@ const BARRIOS = {
 
         {tab === "watchlist" && (
           <div style={{ marginTop: 24 }}>
+            {watchlistError && (
+              <div style={{ background: "#2B0D0D", border: "1.5px solid #FF3B30", borderRadius: 10, padding: "14px 16px", marginBottom: 16 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#FF3B30", marginBottom: 4 }}>Error de Supabase</div>
+                <div style={{ fontSize: 12, color: "#FFB3AD", fontFamily: "monospace", wordBreak: "break-word" }}>{watchlistError}</div>
+              </div>
+            )}
             {watchlist.length === 0 ? (
               <div style={{ textAlign: "center", padding: "60px 0", color: C.textMuted, fontSize: 13, fontFamily: C.mono }}>
                 — WATCHLIST VACÍA —<br /><br />
