@@ -140,8 +140,8 @@ const BARRIOS = {
   const [refType, setRefType] = useState("media");
   const [refExtra, setRefExtra] = useState(0);
   const [closingPct] = useState(0);
-  const [comisionCompraPct, setComisionCompraPct] = useState(0);
-  const [escribanoCompraPct, setEscribanoCompraPct] = useState(1);
+  const [comisionCompraPct, setComisionCompraPct] = useState(4);
+  const [escribanoCompraPct, setEscribanoCompraPct] = useState(2);
   const [valorMuebles, setValorMuebles] = useState(0);
   const [precioVentaPublicado, setPrecioVentaPublicado] = useState("");
   const [precioVentaCierre, setPrecioVentaCierre] = useState("");
@@ -149,8 +149,8 @@ const BARRIOS = {
   const [airbnbPrecioNoche, setAirbnbPrecioNoche] = useState(0);
   const [airbnbDiasMes, setAirbnbDiasMes] = useState(0);
   const [airbnbGastosMensuales, setAirbnbGastosMensuales] = useState(0);
-  const [sellCommPct, setSellCommPct] = useState(3);
-  const [escribanoPct, setEscribanoPct] = useState(1);
+  const [sellCommPct, setSellCommPct] = useState(2);
+  const [escribanoPct, setEscribanoPct] = useState(2);
   const [sellMonths, setSellMonths] = useState(8);
   const [expensas, setExpensas] = useState(150000);
   const [expensasMoneda, setExpensasMoneda] = useState("ARS");
@@ -621,69 +621,81 @@ const BARRIOS = {
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 700, color: "#8A8FA8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 16 }}>Resultado</div>
 
-                  {/* Precio de compra */}
+                  {/* Monto publicado */}
                   <div style={{ background: "#1C1F2E", borderRadius: 12, padding: "16px", marginBottom: 12, border: `1px solid #2A2D3E` }}>
-                    <div style={{ fontSize: 10, color: "#8A8FA8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Precio de compra</div>
-                    <div style={{ fontSize: 30, fontWeight: 800, color: "#3A8EF6", fontFamily: "monospace" }}>{fmtUSD(Math.round(c.buyPrice))}</div>
-                    {m2 > 0 && <div style={{ fontSize: 11, color: "#8A8FA8", marginTop: 4 }}>{fmtUSD(Math.round(c.buyPrice / m2))}/m²</div>}
-                    {c.pctDelARV != null && (
-                      <div style={{ display: "inline-block", marginTop: 8, padding: "3px 10px", borderRadius: 6, background: c.pctDelARV <= 70 ? "#0D2B1D" : c.pctDelARV <= 85 ? "#2B1A0D" : "#2B0D0D", border: `1px solid ${c.pctDelARV <= 70 ? "#34C759" : c.pctDelARV <= 85 ? "#F5A623" : "#FF3B30"}` }}>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: c.pctDelARV <= 70 ? "#34C759" : c.pctDelARV <= 85 ? "#F5A623" : "#FF3B30" }}>{c.pctDelARV?.toFixed(0)}% del ARV</span>
-                      </div>
-                    )}
+                    <div style={{ fontSize: 10, color: "#8A8FA8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Monto publicado</div>
+                    <div style={{ fontSize: 30, fontWeight: 800, color: "#FFFFFF", fontFamily: "monospace" }}>{fmtUSD(listPrice)}</div>
+                    {m2 > 0 && <div style={{ fontSize: 11, color: "#8A8FA8", marginTop: 4 }}>{fmtUSD(Math.round(listPrice / m2))}/m²</div>}
                   </div>
 
-                  {/* Detalle de inversión */}
-                  <div style={{ background: "#1C1F2E", borderRadius: 12, padding: "14px 16px", marginBottom: 12, border: `1px solid #2A2D3E` }}>
-                    <div style={{ fontSize: 10, color: "#8A8FA8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>Detalle de inversión</div>
-                    {[
-                      { label: "Precio de compra", val: c.buyPrice },
-                      { label: `Refacción (CAPEX) · ${refType}`, val: c.refCost },
-                      { label: "Comisión compra", val: c.comisionCompra },
-                      { label: "Escribano compra", val: c.escribanoCompra },
-                    ].map(({ label, val }) => (
-                      <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid #2A2D3E" }}>
-                        <span style={{ fontSize: 12, color: "#8A8FA8" }}>{label}</span>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: "#FFFFFF", fontFamily: "monospace" }}>{fmtUSD(Math.round(val || 0))}</span>
-                      </div>
-                    ))}
-                    <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0" }}>
-                      <span style={{ fontSize: 12, color: "#F5A623", fontWeight: 700 }}>TOTAL COMPRA + CAPEX</span>
-                      <span style={{ fontSize: 16, fontWeight: 800, color: "#F5A623", fontFamily: "monospace" }}>{fmtUSD(Math.round(c.totalCost || 0))}</span>
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderTop: "1px solid #2A2D3E" }}>
-                      <span style={{ fontSize: 12, color: "#8A8FA8" }}>OPEX · expensas × {sellMonths} meses</span>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: "#FFFFFF", fontFamily: "monospace" }}>{fmtUSD(Math.round(c.expensasTotal || 0))}</span>
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0 0" }}>
-                      <span style={{ fontSize: 12, color: "#F5A623", fontWeight: 700 }}>TOTAL INVERTIDO + TENENCIA</span>
-                      <span style={{ fontSize: 16, fontWeight: 800, color: "#F5A623", fontFamily: "monospace" }}>{fmtUSD(Math.round((c.totalCost || 0) + (c.expensasTotal || 0)))}</span>
-                    </div>
-                  </div>
-
-                  {/* ARV */}
                   {barrio && m2 > 0 && (
-                    <div style={{ background: "#1C1F2E", borderRadius: 12, padding: "16px", marginBottom: 12, border: `1px solid #34C759` }}>
-                      <div style={{ fontSize: 10, color: "#34C759", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>ARV estimado · {barrio}</div>
-                      <div style={{ fontSize: 30, fontWeight: 800, color: "#34C759", fontFamily: "monospace" }}>{fmtUSD(Math.round(c.arv || 0))}</div>
-                      <div style={{ fontSize: 11, color: "#8A8FA8", marginTop: 4 }}>{fmt(c.arvM2)} USD/m²</div>
-                    </div>
-                  )}
-
-                  {/* Precios por m2 */}
-                  {m2 > 0 && barrio && (
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
-                      {[
-                        { label: "Compra/m²", val: fmtUSD(Math.round(c.buyPrice / m2)), color: "#3A8EF6" },
-                        { label: "Invertido/m²", val: fmtUSD(Math.round(c.totalCost / m2)), color: "#F5A623" },
-                        { label: "Venta/m²", val: fmtUSD(c.arvM2), color: "#34C759" },
-                      ].map(({ label, val, color }) => (
-                        <div key={label} style={{ background: "#1C1F2E", borderRadius: 8, padding: "10px 10px", textAlign: "center" }}>
-                          <div style={{ fontSize: 9, color: "#8A8FA8", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 4 }}>{label}</div>
-                          <div style={{ fontSize: 13, fontWeight: 700, color, fontFamily: "monospace" }}>{val}</div>
+                    <>
+                      {/* MAO — Máximo a Ofrecer */}
+                      {c.mao != null && (
+                        <div style={{ background: c.mao > 0 ? "#1C1F2E" : "#2B0D0D", borderRadius: 14, padding: "16px", marginBottom: 12, border: `2px solid ${c.mao > 0 ? "#F5A623" : "#FF3B30"}`, textAlign: "center" }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: "#8A8FA8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>MAO — Máximo a Ofrecer</div>
+                          <div style={{ fontSize: 30, fontWeight: 800, color: c.mao > 0 ? "#F5A623" : "#FF3B30", fontFamily: "monospace" }}>
+                            {c.mao > 0 ? fmtUSD(Math.round(c.mao)) : "—"}
+                          </div>
+                          <div style={{ fontSize: 10, color: "#8A8FA8", marginTop: 4 }}>{c.pctMaoDelArv?.toFixed(0)}% del ARV · rentabilidad {rentabilidadObjetivo}% anual</div>
+                          {c.margenNegociacion > 0 && (
+                            <div style={{ fontSize: 12, color: "#8A8FA8", lineHeight: 1.5, marginTop: 8, paddingTop: 8, borderTop: "1px solid #2A2D3E" }}>
+                              Publicado {fmtUSD(listPrice)} → necesitás negociar <span style={{ color: "#34C759", fontWeight: 700 }}>−{fmtUSD(Math.round(c.margenNegociacion))}</span>
+                            </div>
+                          )}
                         </div>
-                      ))}
-                    </div>
+                      )}
+
+                      {/* ARV */}
+                      <div style={{ background: "#1C1F2E", borderRadius: 12, padding: "16px", marginBottom: 12, border: `1px solid #34C759` }}>
+                        <div style={{ fontSize: 10, color: "#34C759", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>ARV estimado · {barrio}</div>
+                        <div style={{ fontSize: 30, fontWeight: 800, color: "#34C759", fontFamily: "monospace" }}>{fmtUSD(Math.round(c.arv || 0))}</div>
+                        <div style={{ fontSize: 11, color: "#8A8FA8", marginTop: 4 }}>{fmt(c.arvM2)} USD/m²</div>
+                      </div>
+
+                      {/* CAPEX */}
+                      <div style={{ background: "#1C1F2E", borderRadius: 12, padding: "14px 16px", marginBottom: 12, border: `1px solid #2A2D3E` }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
+                          <span style={{ fontSize: 10, color: "#8A8FA8", textTransform: "uppercase", letterSpacing: "0.06em" }}>CAPEX</span>
+                          <span style={{ fontSize: 18, fontWeight: 800, color: "#FFFFFF", fontFamily: "monospace" }}>{fmtUSD(Math.round(c.refCost || 0))}</span>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", borderTop: "1px solid #2A2D3E" }}>
+                          <span style={{ fontSize: 12, color: "#8A8FA8" }}>Refacción {refLabels[refType]} · {refRates[refType]}/m² × {m2}m²</span>
+                          <span style={{ fontSize: 12, color: "#FFFFFF", fontFamily: "monospace" }}>{fmtUSD(Math.round(refRates[refType] * m2))}</span>
+                        </div>
+                        {refExtra > 0 && (
+                          <div style={{ display: "flex", justifyContent: "space-between", padding: "5px 0" }}>
+                            <span style={{ fontSize: 12, color: "#8A8FA8" }}>Extra</span>
+                            <span style={{ fontSize: 12, color: "#FFFFFF", fontFamily: "monospace" }}>{fmtUSD(refExtra)}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* OPEX */}
+                      <div style={{ background: "#1C1F2E", borderRadius: 12, padding: "14px 16px", marginBottom: 12, border: `1px solid #2A2D3E` }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
+                          <span style={{ fontSize: 10, color: "#8A8FA8", textTransform: "uppercase", letterSpacing: "0.06em" }}>OPEX</span>
+                          <span style={{ fontSize: 18, fontWeight: 800, color: "#FFFFFF", fontFamily: "monospace" }}>{fmtUSD(Math.round((c.gastosCompraMao || 0) + (c.gastosVentaMao || 0) + (c.expensasTotal || 0)))}</span>
+                        </div>
+                        {[
+                          { label: "Inmob. compra", pct: comisionCompraPct, set: setComisionCompraPct, val: c.arv ? c.arv * comisionCompraPct / 100 : 0 },
+                          { label: "Escribanía compra", pct: escribanoCompraPct, set: setEscribanoCompraPct, val: c.arv ? c.arv * escribanoCompraPct / 100 : 0 },
+                          { label: "Inmob. venta", pct: sellCommPct, set: setSellCommPct, val: c.sellComm || 0 },
+                          { label: "Escribanía venta", pct: escribanoPct, set: setEscribanoPct, val: c.escribanoCost || 0 },
+                        ].map(({ label, pct, set, val }) => (
+                          <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderTop: "1px solid #2A2D3E" }}>
+                            <span style={{ fontSize: 12, color: "#8A8FA8", flex: 1 }}>{label}</span>
+                            <input type="number" value={pct} onChange={e => set(Number(e.target.value) || 0)}
+                              style={{ width: 44, padding: "3px 4px", background: "#0F1117", border: "1px solid #2A2D3E", borderRadius: 5, color: "#F5A623", fontSize: 11, fontFamily: "monospace", textAlign: "center", marginRight: 8, outline: "none" }} />
+                            <span style={{ fontSize: 12, color: "#FFFFFF", fontFamily: "monospace", width: 80, textAlign: "right" }}>{fmtUSD(Math.round(val))}</span>
+                          </div>
+                        ))}
+                        <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderTop: "1px solid #2A2D3E" }}>
+                          <span style={{ fontSize: 12, color: "#8A8FA8" }}>Expensas (tenencia × {sellMonths}m)</span>
+                          <span style={{ fontSize: 12, color: "#FFFFFF", fontFamily: "monospace" }}>{fmtUSD(Math.round(c.expensasTotal || 0))}</span>
+                        </div>
+                      </div>
+                    </>
                   )}
 
                   {/* Ganancia y ROI */}
@@ -700,22 +712,6 @@ const BARRIOS = {
                           <div style={{ fontSize: 9, color: "#8A8FA8", marginTop: 2 }}>mín. {c.roiMinimoExigido?.toFixed(1)}%</div>
                         </div>
                       </div>
-
-                      {/* MAO — Máximo a Ofrecer */}
-                      {c.mao != null && (
-                        <div style={{ background: c.mao > 0 ? "#1C1F2E" : "#2B0D0D", borderRadius: 14, padding: "16px", marginBottom: 12, border: `2px solid ${c.mao > 0 ? "#F5A623" : "#FF3B30"}`, textAlign: "center" }}>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: "#8A8FA8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>MAO — Máximo a Ofrecer</div>
-                          <div style={{ fontSize: 30, fontWeight: 800, color: c.mao > 0 ? "#F5A623" : "#FF3B30", fontFamily: "monospace" }}>
-                            {c.mao > 0 ? fmtUSD(Math.round(c.mao)) : "—"}
-                          </div>
-                          <div style={{ fontSize: 10, color: "#8A8FA8", marginTop: 4 }}>{c.pctMaoDelArv?.toFixed(0)}% del ARV · rentabilidad {rentabilidadObjetivo}% anual</div>
-                          {c.margenNegociacion > 0 && (
-                            <div style={{ fontSize: 12, color: "#8A8FA8", lineHeight: 1.5, marginTop: 8, paddingTop: 8, borderTop: "1px solid #2A2D3E" }}>
-                              Publicado {fmtUSD(listPrice)} → necesitás negociar <span style={{ color: "#34C759", fontWeight: 700 }}>−{fmtUSD(Math.round(c.margenNegociacion))}</span>
-                            </div>
-                          )}
-                        </div>
-                      )}
 
                       {/* Veredicto */}
                       <div style={{ background: c.viableNeto ? "#0D2B1D" : "#2B0D0D", border: `1.5px solid ${c.viableNeto ? "#34C759" : "#FF3B30"}`, borderRadius: 12, padding: "14px 16px", marginBottom: 16, textAlign: "center" }}>
