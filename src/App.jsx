@@ -876,7 +876,7 @@ const BARRIOS = {
           </div>
         )}
 
-        {/* ===== MAO ===== */}
+        {tab === "watchlist" && (
           <div style={{ marginTop: 24 }}>
             {watchlist.length === 0 ? (
               <div style={{ textAlign: "center", padding: "60px 0", color: C.textMuted, fontSize: 13, fontFamily: C.mono }}>
