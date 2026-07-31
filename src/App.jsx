@@ -543,6 +543,21 @@ const BARRIOS = {
                     </div>
                   </div>
 
+                  {/* Precio de venta x m² (editable, override del barrio) */}
+                  {barrio && (
+                    <div style={{ marginBottom: 12 }}>
+                      <div style={{ fontSize: 11, color: "#8A8FA8", marginBottom: 5, fontWeight: 500 }}>Precio de venta x m² (USD) — editable</div>
+                      <input type="number" value={customUsadoM2} onChange={e => setCustomUsadoM2(e.target.value)}
+                        placeholder={`${BARRIOS[barrio].reciclado} (referencia ${barrio})`}
+                        style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: "#1C1F2E", border: `1.5px solid ${customUsadoM2 ? "#F5A623" : "#2A2D3E"}`, borderRadius: 8, color: "#FFFFFF", fontSize: 17, fontWeight: 700, fontFamily: "monospace", outline: "none" }} />
+                      <div style={{ fontSize: 10, color: "#8A8FA8", marginTop: 4 }}>
+                        {customUsadoM2
+                          ? `Usando tu valor: ${fmtUSD(Number(customUsadoM2))}/m² (ref. barrio: ${fmtUSD(BARRIOS[barrio].reciclado)}/m²)`
+                          : `Usando referencia de ${barrio}. Escribí un valor si tenés un dato más preciso para esta propiedad.`}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Descuento */}
                   <div style={{ marginBottom: 12 }}>
                     <div style={{ fontSize: 11, color: "#8A8FA8", marginBottom: 5, fontWeight: 500 }}>Descuento negociación (%)</div>
@@ -605,6 +620,34 @@ const BARRIOS = {
                         <span style={{ fontSize: 11, fontWeight: 700, color: c.pctDelARV <= 70 ? "#34C759" : c.pctDelARV <= 85 ? "#F5A623" : "#FF3B30" }}>{c.pctDelARV?.toFixed(0)}% del ARV</span>
                       </div>
                     )}
+                  </div>
+
+                  {/* Detalle de inversión */}
+                  <div style={{ background: "#1C1F2E", borderRadius: 12, padding: "14px 16px", marginBottom: 12, border: `1px solid #2A2D3E` }}>
+                    <div style={{ fontSize: 10, color: "#8A8FA8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>Detalle de inversión</div>
+                    {[
+                      { label: "Precio de compra", val: c.buyPrice },
+                      { label: `Refacción (CAPEX) · ${refType}`, val: c.refCost },
+                      { label: "Comisión compra", val: c.comisionCompra },
+                      { label: "Escribano compra", val: c.escribanoCompra },
+                    ].map(({ label, val }) => (
+                      <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid #2A2D3E" }}>
+                        <span style={{ fontSize: 12, color: "#8A8FA8" }}>{label}</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: "#FFFFFF", fontFamily: "monospace" }}>{fmtUSD(Math.round(val || 0))}</span>
+                      </div>
+                    ))}
+                    <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0" }}>
+                      <span style={{ fontSize: 12, color: "#F5A623", fontWeight: 700 }}>TOTAL COMPRA + CAPEX</span>
+                      <span style={{ fontSize: 16, fontWeight: 800, color: "#F5A623", fontFamily: "monospace" }}>{fmtUSD(Math.round(c.totalCost || 0))}</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderTop: "1px solid #2A2D3E" }}>
+                      <span style={{ fontSize: 12, color: "#8A8FA8" }}>OPEX · expensas × {sellMonths} meses</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: "#FFFFFF", fontFamily: "monospace" }}>{fmtUSD(Math.round(c.expensasTotal || 0))}</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0 0" }}>
+                      <span style={{ fontSize: 12, color: "#F5A623", fontWeight: 700 }}>TOTAL INVERTIDO + TENENCIA</span>
+                      <span style={{ fontSize: 16, fontWeight: 800, color: "#F5A623", fontFamily: "monospace" }}>{fmtUSD(Math.round((c.totalCost || 0) + (c.expensasTotal || 0)))}</span>
+                    </div>
                   </div>
 
                   {/* ARV */}
